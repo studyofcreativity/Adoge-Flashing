@@ -1,0 +1,103 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DocFlashirInfo — Información del programa</title><style>@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:#20232a;color:#e8ebf0;font-family:Inter,system-ui,Arial}.toolbar{position:sticky;top:0;z-index:10;background:#111318;border-bottom:1px solid #3a3f48;padding:10px 14px;display:flex;gap:8px}.toolbar b{margin-right:auto}.toolbar a,.toolbar button{background:#292e36;color:#fff;border:1px solid #444b56;border-radius:7px;padding:8px 12px;text-decoration:none;cursor:pointer}.page{width:210mm;min-height:297mm;margin:18px auto;background:#17191d;padding:13mm 15mm;page-break-after:always;box-shadow:0 8px 40px #0008}.n{font-size:9px;color:#89919d;letter-spacing:1px;border-bottom:1px solid #303640;padding-bottom:5px}h1{color:#ffb52e;font-size:25px;line-height:1.15}h2{color:#4da3ff;font-size:15px;border-top:1px solid #2d333d;padding-top:7px}p,li{font-size:11.5px;line-height:1.5;color:#c7cdd5}pre{white-space:pre-wrap;background:#0d1014;border:1px solid #353b45;border-radius:7px;padding:10px;color:#dce2ea;font:10.3px/1.45 ui-monospace,Consolas,monospace}table{width:100%;border-collapse:collapse;font-size:10.5px}th,td{border:1px solid #303640;padding:6px;vertical-align:top}th{color:#ffb52e;text-align:left}@media print{.toolbar{display:none}.page{margin:0;box-shadow:none}}</style></head><body><div class="toolbar"><b>DocFlashirInfo · Información del editor y runtime</b><button onclick="window.print()">🖨 Imprimir / PDF</button><button onclick="openCopyAllPages()">📋 Copiar todas las páginas</button><a href="index.html">← Flashir</a><a href="DocFlashir.html">📘 DocFlashir</a></div><section class="page"><div class="n">DOCFLASHIRINFO · 1</div><h1>Identidad</h1><p>flashir.html es una aplicación web autocontenida que contiene editor, Canvas, consola, ejemplos e intérprete. Este documento explica el programa anfitrión; DocFlashir explica la sintaxis del lenguaje.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 2</div><h1>Canvas inicial</h1><table><tr><th>Dato</th><th>Valor</th></tr><tr><td>ancho inicial</td><td>600</td></tr><tr><td>alto inicial</td><td>400</td></tr><tr><td>modelo</td><td>Canvas 2D</td></tr><tr><td>origen</td><td>(0,0), esquina superior izquierda</td></tr></table><p>El tamaño lógico puede cambiar con tamanoLienzo(w,h).</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 3</div><h1>Interfaz</h1><p>La barra superior contiene marca, ejemplos, Ejecutar, Detener, Descargar PNG, Lenguaje y Documentación. El área principal divide editor y resultado, y la consola queda debajo del Canvas.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 4</div><h1>Editor</h1><p>El editor es un textarea de fuente monoespaciada. Conserva saltos de línea y espacios. Ctrl+Enter ejecuta el código.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 5</div><h1>Ejecutar</h1><p>Ejecutar detiene la animación previa, reinicia scopes, funciones, frames y reloj; después tokeniza, analiza y ejecuta. Si existe animar, comienza el ciclo de frames.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 6</div><h1>Detener</h1><p>Detener cancela requestAnimationFrame activo. El código permanece en el editor y el Canvas conserva su estado hasta la siguiente ejecución o dibujo.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 7</div><h1>Ejemplos</h1><p>Hay ejemplos de dibujo, azar, rebote, mouse, trazos, funciones, listas, teclado, degradados, polígonos, objetos, formas, Tetris, partículas, aventura, gravedad y UI.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 8</div><h1>Tamaño visual vs lógico</h1><p>CSS puede reducir o ampliar el Canvas dentro de la ventana. Las coordenadas del lenguaje siguen usando canvas.width y canvas.height. El cálculo del mouse compensa la escala visual.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 9</div><h1>Teclado</h1><p>keydown y keyup mantienen un conjunto de teclas presionadas. tecla_presionada consulta estado continuo; tecla_justo_presionada y tecla_justo_soltada consultan transiciones.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 10</div><h1>Mouse</h1><p>mousemove actualiza raton_x/y; click actualiza click_x/y y activa un pulso de clic. Las funciones mouseEnRect, clickEnRect y clickEnCirculo facilitan interacción.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 11</div><h1>Animación</h1><p>requestAnimationFrame controla el ciclo. delta expresa segundos aproximados desde el frame anterior, fps estima frecuencia y frame cuenta frames. El runtime limita el delta para estabilizar pausas largas.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 12</div><h1>Cámara</h1><p>camara(x,y,zoom) cambia la transformación del Canvas. mundoX/Y y pantallaX/Y convierten coordenadas. resetearTransformacion restaura identidad.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 13</div><h1>Colisiones</h1><p>colisionRect compara dos cajas; colisionCirculos compara dos círculos; puntoEnRect y puntoEnCirculo prueban pertenencia. El runtime no aplica automáticamente físicas.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 14</div><h1>Imágenes y CORS</h1><p>imagen() carga URLs y usa una caché por recurso. El navegador decide si un recurso externo es compatible con Canvas y exportación mediante sus políticas CORS.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 15</div><h1>Audio</h1><p>tono y bip usan Web Audio para sonidos simples. El navegador puede exigir interacción del usuario antes de permitir audio; no es un sistema musical completo.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 16</div><h1>Persistencia</h1><p>guardarDato, cargarDato, existeDato y borrarDato usan localStorage. Es almacenamiento local del navegador, no una base de datos de servidor.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 17</div><h1>Rendimiento</h1><p>El rendimiento práctico depende del navegador, CPU, GPU, cantidad de objetos, paths, sombras, texto y operaciones por frame. No existe un único número universal de entidades soportadas.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 18</div><h1>Protecciones</h1><p>Los bucles para/mientras tienen guardas contra demasiadas iteraciones y las funciones recursivas tienen un límite de profundidad. Son protecciones contra errores accidentales.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 19</div><h1>Seguridad y límites</h1><p>Flashir no expone acceso arbitrario al sistema operativo ni evalúa JavaScript del usuario como código Flashir. Los recursos del navegador siguen sujetos a sus propias políticas.</p></section><section class="page"><div class="n">DOCFLASHIRINFO · 20</div><h1>Resumen técnico</h1><table><tr><th>Elemento</th><th>Valor</th></tr><tr><td>Canvas</td><td>600×400 inicial, redimensionable</td></tr><tr><td>Render</td><td>Canvas 2D</td></tr><tr><td>Loop</td><td>requestAnimationFrame</td></tr><tr><td>Parser</td><td>lexer + parser + AST</td></tr><tr><td>Entrada</td><td>teclado + mouse</td></tr><tr><td>Consola</td><td>integrada</td></tr><tr><td>Exportación</td><td>PNG del Canvas actual</td></tr></table></section>
+<style>
+#copyAllPagesPanel{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:99999;
+  display:none;align-items:center;justify-content:center;padding:22px
+}
+#copyAllPagesCard{
+  width:min(1100px,96vw);height:min(90vh,950px);background:#17191d;
+  border:1px solid #3b414b;border-radius:11px;display:flex;flex-direction:column;
+  overflow:hidden;box-shadow:0 20px 80px #000
+}
+.copyAllHead{
+  padding:14px 16px;border-bottom:1px solid #3a3f48;display:flex;
+  align-items:center;gap:8px
+}
+.copyAllHead h2{margin:0;color:#ffb52e;font-size:17px}
+.copyAllHead .spacer{margin-left:auto}
+.copyAllHead button{
+  background:#292e36;color:#fff;border:1px solid #454b55;border-radius:7px;
+  padding:8px 12px;cursor:pointer
+}
+.copyAllHead button.primary{
+  background:#ffb52e;color:#17120a;border-color:#ffb52e;font-weight:800
+}
+#copyAllPagesText{
+  flex:1;width:100%;resize:none;border:0;outline:0;background:#0d1014;
+  color:#e9ecf1;padding:16px;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace
+}
+.copyAllFoot{
+  padding:9px 16px;border-top:1px solid #3a3f48;color:#9ca5b0;font-size:11px
+}
+</style>
+
+<div id="copyAllPagesPanel">
+  <div id="copyAllPagesCard">
+    <div class="copyAllHead">
+      <h2>📋 Copiar todas las páginas como texto</h2>
+      <div class="spacer"></div>
+      <button class="primary" id="copyAllPagesBtn">Copiar todo</button>
+      <button id="selectAllPagesBtn">Seleccionar todo</button>
+      <button id="closeCopyAllPagesBtn">Cerrar</button>
+    </div>
+    <textarea id="copyAllPagesText" readonly spellcheck="false"></textarea>
+    <div class="copyAllFoot">
+      Genera un único texto con las 20 páginas de DocFlashirInfo, separadas claramente para poder pegarlo en otra IA.
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function buildAllPages(){
+    const pages=[...document.querySelectorAll('.page')];
+    return pages.map((page,i)=>{
+      const title=page.querySelector('h1')?.innerText?.trim()||('Página '+(i+1));
+      return [
+        '================================================================================',
+        'DOCFLASHIRINFO — PÁGINA '+(i+1)+' — '+title.toUpperCase(),
+        '================================================================================',
+        page.innerText.trim()
+      ].join('\\n');
+    }).join('\\n\\n');
+  }
+
+  window.openCopyAllPages=function(){
+    const panel=document.getElementById('copyAllPagesPanel');
+    const area=document.getElementById('copyAllPagesText');
+    area.value=buildAllPages();
+    panel.style.display='flex';
+    area.focus();
+    area.select();
+  };
+
+  document.getElementById('closeCopyAllPagesBtn').onclick=function(){
+    document.getElementById('copyAllPagesPanel').style.display='none';
+  };
+
+  document.getElementById('selectAllPagesBtn').onclick=function(){
+    const area=document.getElementById('copyAllPagesText');
+    area.focus();
+    area.select();
+  };
+
+  document.getElementById('copyAllPagesBtn').onclick=async function(){
+    const area=document.getElementById('copyAllPagesText');
+    try{
+      await navigator.clipboard.writeText(area.value);
+    }catch(e){
+      area.focus();
+      area.select();
+      document.execCommand('copy');
+    }
+    this.textContent='✓ Copiado';
+    setTimeout(()=>this.textContent='Copiar todo',1600);
+  };
+
+  document.getElementById('copyAllPagesPanel').addEventListener('click',function(e){
+    if(e.target===this)this.style.display='none';
+  });
+})();
+</script>
+
+</body></html>

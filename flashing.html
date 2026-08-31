@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Flashing — Editor web v15</title>
+<style>
+:root{--bg:#17191d;--panel:#22252b;--panel2:#292d34;--line:#3a3f48;--text:#e9ecf1;--muted:#aeb5c0;--accent:#ffb52e;--blue:#4da3ff;--danger:#ff6262}
+:root{color-scheme:light dark}body[data-theme="dark"]{color-scheme:dark;background:#17191d;color:#e9ecf1}body[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}
+button{border:1px solid #3c414b;background:#2a2e35;color:var(--text);border-radius:6px;padding:8px 12px;cursor:pointer;white-space:nowrap}button:hover{background:#353a43}button.active{background:#3b424c;outline:1px solid var(--accent)}
+#app{display:grid;grid-template-rows:68px 1fr 330px;height:100vh;min-height:0}
+#top{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:#121418;min-width:0;white-space:nowrap}.topGroup{display:flex;align-items:center;gap:8px;min-width:0}.topMenu{position:relative}.topMenuPanel{position:absolute;top:calc(100% + 7px);left:0;min-width:190px;padding:7px;background:#22262d;border:1px solid #424852;border-radius:8px;box-shadow:0 16px 40px #000b;display:none;z-index:50}.topMenu:hover .topMenuPanel,.topMenu:focus-within .topMenuPanel{display:flex;flex-direction:column;gap:5px}.topMenuPanel button{text-align:left;width:100%}.status{max-width:260px;overflow:hidden;text-overflow:ellipsis}.brand{font-size:19px;font-weight:800;letter-spacing:.2px;margin:0 10px 0 3px;color:#fff}.brand span{color:var(--accent)}
+.sep{width:1px;height:25px;background:var(--line);margin:0 2px}.spacer{flex:1}.status{font-size:12px;color:var(--muted)}
+#main{display:grid;grid-template-columns:78px 1fr 320px;min-height:0;position:relative}
+#tools{border-right:1px solid var(--line);background:var(--panel);padding:8px 6px;display:flex;flex-direction:column;gap:4px;position:relative;z-index:19;overflow-y:auto}.tool{font-size:11px;padding:5px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:46px}.tool b{font-size:16px}.tool small{color:var(--muted)}
+#workspace{position:relative;min-width:0;background:#101216;display:flex;flex-direction:column;overflow:hidden}.workbar{min-height:44px;height:auto;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:7px 10px;background:#1c1f24;flex-wrap:wrap}.workbar label{font-size:12px;color:var(--muted)}.workbar input,.workbar select{background:#111318;color:#e8ebef;border:1px solid #3b4048;border-radius:4px;padding:4px 6px}.canvaswrap{flex:1;overflow:hidden;display:block;position:relative;padding:0;background:radial-gradient(circle at center,#252931 0,#171a1f 42%,#101216 100%);cursor:grab}.canvaswrap.panning{cursor:grabbing}.canvaswrap.panning{cursor:grabbing}#stageBox{position:absolute;left:50%;top:50%;box-shadow:0 8px 30px #000;flex:none;transform-origin:center center;will-change:transform}canvas{display:block;background:white}
+#inspector{border-left:1px solid var(--line);background:var(--panel);min-width:0;display:flex;flex-direction:column;resize:horizontal;overflow:auto;min-width:220px;max-width:600px}.panelTitle{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:9px 10px;border-bottom:1px solid var(--line);color:#cdd2da}.insBody{padding:9px;overflow:auto}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}.field{margin-bottom:8px}.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}.field input,.field select,.field textarea{width:100%;background:#121419;color:#e8ebef;border:1px solid #3b4048;border-radius:4px;padding:6px;font-size:12px}.field textarea{min-height:70px;resize:vertical}.row{display:flex;gap:6px;align-items:center}.row>button{flex:1}.hint{font-size:11px;color:var(--muted);line-height:1.45}.soundWave{width:100%;height:120px;display:block;background:#101217;border:1px solid #3b4048;border-radius:5px}.soundControls{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#bottom{display:grid;grid-template-columns:320px 1fr;border-top:2px solid #555b66;background:#1b1e23;min-height:180px;max-height:70vh;position:relative;z-index:10;box-shadow:0 -8px 24px #0008;resize:vertical;overflow:hidden}.library{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;resize:horizontal;overflow:hidden;min-width:180px;max-width:500px}.libraryActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:7px;border-bottom:1px solid var(--line)}.libraryActions button{font-size:11px;padding:7px 6px}.libList{padding:8px;overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;scrollbar-width:auto;overscroll-behavior:contain}.libItem{display:flex;align-items:center;gap:7px;padding:7px;border-radius:4px;font-size:12px}.libItem:hover,.libItem.sel{background:#30353d}.libItem{cursor:grab;user-select:none}.libItem:active{cursor:grabbing}.libItem img{width:28px;height:28px;object-fit:cover;border-radius:3px}.icon{width:24px;height:24px;border:1px solid #454b55;border-radius:4px;display:grid;place-items:center;background:#171a1f}.libMeta{margin-left:auto;color:var(--muted);font-size:10px}
+#timeline{display:flex;flex-direction:column;min-width:0}.timelineTop{min-height:96px;height:auto;border-bottom:2px solid #4b515c;display:flex;align-content:center;align-items:center;gap:8px;padding:8px;flex-wrap:wrap;background:#20242a}.timelineGroup{display:flex;align-items:center;gap:6px;padding-right:4px}.timelineGroupLabel{font-size:11px;color:#aeb5c0;margin-right:1px}.timelineTop input{width:62px;background:#111318;color:#fff;border:1px solid #3b4048;border-radius:4px;padding:4px 6px}.timelineScroll{overflow:auto;min-height:0;flex:1;background:#191c21}.timelineGrid{min-width:2580px;position:relative}.numbers{display:grid;grid-template-columns:180px repeat(80,30px);height:25px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#20242a;z-index:3}.numbers>div{border-right:1px solid #343941;font-size:10px;color:#9da4af;display:flex;align-items:center;justify-content:center}.numbers>div:first-child{justify-content:flex-start;padding-left:9px}.layerRow{display:grid;grid-template-columns:180px repeat(80,30px);height:32px;border-bottom:1px solid #31353d}.layerName{padding:5px 6px;font-size:11px;border-right:1px solid #343941;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#252931;display:flex;align-items:center;gap:4px}.layerName input{width:100%;min-width:0;background:#171a1f;color:#e9ecf1;border:1px solid #454b55;border-radius:4px;padding:4px;font-size:11px}.cell{border-right:1px solid #2d323a;position:relative}.cell.key:after{content:"";position:absolute;width:9px;height:9px;border-radius:2px;transform:rotate(45deg);left:8px;top:10px;background:#7e8794}.cell.key.active:after{background:var(--accent)}.playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:4;pointer-events:none}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:20}.modal.show{display:flex}.newCard{width:min(520px,92vw);background:#22262d;border:1px solid #414750;border-radius:8px;box-shadow:0 20px 80px #000;padding:16px}.newCard h2{margin:0 0 12px;font-size:18px}.newGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.newGrid label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}.newGrid input{width:100%;background:#121419;color:#e8ebef;border:1px solid #3b4048;border-radius:4px;padding:8px;font-size:13px}.newActions{display:flex;gap:8px;margin-top:14px}.newActions button{flex:1}.modalCard{width:min(680px,92vw);max-height:82vh;overflow:auto;background:#22262d;border:1px solid #414750;border-radius:8px;box-shadow:0 20px 80px #000;padding:16px}.modalCard h2{margin:0 0 8px;font-size:18px}.codebox{width:100%;height:360px;background:#101217;color:#dbe0e7;border:1px solid #3c414a;border-radius:5px;padding:9px;font-family:ui-monospace,monospace;font-size:11px;white-space:pre;overflow:auto}
+.settingsCard{width:min(760px,94vw);max-height:86vh;background:#22262d;border:1px solid #414750;border-radius:10px;box-shadow:0 20px 80px #000;display:flex;flex-direction:column;overflow:hidden}.settingsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid #3a3f48;background:#1c1f24}.settingsHead h2{margin:0;font-size:17px}.settingsHead p{margin:3px 0 0;font-size:12px;color:#aeb5c0}.settingsBody{display:flex;flex:1;min-height:0}.settingsNav{width:152px;flex:none;display:flex;flex-direction:column;gap:2px;padding:8px;border-right:1px solid #3a3f48;overflow-y:auto}.settingsNav button{text-align:left;border:1px solid transparent;background:transparent;padding:8px 9px;border-radius:6px;font-size:12.5px}.settingsNav button.active{background:#30353d;border-color:var(--accent)}.settingsContent{flex:1;overflow-y:auto;padding:14px 18px}.settingsSection{display:none}.settingsSection.active{display:block}.settingsSection h3{margin:0 0 4px;font-size:14px}.settingsSection>p{margin:0 0 12px;font-size:12px;color:#aeb5c0}.settingsField{background:#1a1d22;border:1px solid #353a43;border-radius:6px;padding:9px 10px;margin-bottom:8px}.settingsField label{display:block;font-size:11.5px;color:#aeb5c0;margin-bottom:5px}.settingsField select,.settingsField input{width:100%;background:#101318;color:#e9ecf1;border:1px solid #3c424c;border-radius:4px;padding:6px}.checkLabel{display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer}.checkLabel input{width:auto!important}.settingsHint{font-size:11px;color:#9199a5;margin-top:4px}.settingsActions{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #3a3f48;background:#1c1f24}.settingsDanger{color:#ff8b8b;border-color:#7a3c3c}
+#fileInput,#audioInput,#assetInput{display:none}.hintBox{padding:10px;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.45}.dangerBtn{border-color:#714040}.miniBtn{padding:6px 8px;font-size:11px}.dropReady:after{content:'Suelta aquí imágenes, sonidos o proyectos de Flashing';position:fixed;inset:20px;border:2px dashed var(--accent);border-radius:14px;background:#111b;display:grid;place-items:center;z-index:25;color:#fff;font-weight:700;font-size:18px;pointer-events:none}.toast{position:fixed;right:15px;bottom:225px;background:#2b3038;border:1px solid #4a505a;padding:9px 12px;border-radius:6px;font-size:12px;opacity:0;transform:translateY(7px);transition:.2s;z-index:30}.toast.show{opacity:1;transform:none}
+#bottom.customPanel{position:fixed;box-sizing:border-box;z-index:18;border:2px solid #555b66;border-radius:8px;resize:both;min-width:420px;min-height:180px;max-width:96vw;max-height:80vh;overflow:hidden;box-shadow:0 14px 45px #000b}#bottom.customPanel:after{content:'↘';position:absolute;right:5px;bottom:2px;color:#7e8794;font-size:13px;pointer-events:none}.customPanel .timelineTop{cursor:default}.panelMoveHint{font-size:10px;color:#8f97a3;margin-left:4px}.viewReadout{font-size:10px;color:#9da4af;padding:0 4px;min-width:90px}@media(max-width:900px){#bottom.customPanel{max-width:98vw}.workbar{gap:6px}}
+
+/* Flashing v4 professional workspace */
+#top{height:58px;padding:0 12px;gap:6px;background:#181a1f;border-bottom:1px solid #343943;box-shadow:0 2px 12px #0007}
+#top button{height:38px;border-radius:5px;padding:0 12px;font-size:13px}#top .brand{margin-right:12px;font-size:20px}.topGroup{gap:5px}
+#main{grid-template-columns:72px minmax(420px,1fr) 310px;background:#111318}
+#tools{padding:8px 6px;gap:6px;background:#20242b}.tool{min-height:58px;border-radius:4px}.tool.active{box-shadow:inset 0 0 0 1px var(--accent);background:#2a2f37}
+.workbar{min-height:48px;padding:6px 12px;background:#22262d;border-bottom:1px solid #3a3f48}.workbar input,.workbar select{height:30px}
+.canvaswrap{background-color:#16191e;background-image:linear-gradient(#252a31 1px,transparent 1px),linear-gradient(90deg,#252a31 1px,transparent 1px),radial-gradient(circle at center,#30353d 0,#1a1d22 55%,#111318 100%);background-size:20px 20px,20px 20px,100% 100%}
+#stageBox{box-shadow:0 10px 34px #000c;border:1px solid #050608}
+#inspector{background:#20242b;border-left:1px solid #3b4048}.panelTitle{background:#252a31;border-bottom:1px solid #3b4048;padding:11px 12px}
+#bottom{background:#1d2025;border-top:1px solid #454a54;box-shadow:0 -6px 25px #0008}
+.library{background:#1c1f24}.timelineTop{background:#252a31;border-bottom:1px solid #414650;padding:8px 9px;gap:8px}.timelineGroup{gap:5px}.timelineGroupLabel{color:#aeb5c0;font-weight:700;font-size:10px}
+.timelineScroll{background:#181b20}.numbers>div,.layerName,.cell{height:30px}.layerName input{height:24px;box-sizing:border-box}
+.codeCard{width:min(1100px,92vw);height:min(700px,82vh);background:#1d2026;border:1px solid #4b515c;border-radius:8px;box-shadow:0 25px 70px #000d;display:flex;flex-direction:column;overflow:hidden}.codeHead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #414650}.codeHead h2{margin:0;font-size:17px}.codeSub{font-size:11px;color:#929aa6;margin-top:3px}.codeActions{display:flex;gap:6px}.codeLayout{display:grid;grid-template-columns:1fr 250px;min-height:0;flex:1}.codeLayout textarea{width:100%;height:100%;resize:none;border:0;border-right:1px solid #414650;border-radius:0;background:#111318;color:#dfe4ea;padding:16px;font:13px/1.55 Consolas,Monaco,monospace;outline:none;box-sizing:border-box}.apiHelp{padding:14px;overflow:auto;color:#aeb5c0;font-size:11px}.apiHelp b{display:block;color:#fff;margin-bottom:10px}.apiHelp code{display:block;background:#14171c;border:1px solid #30353d;border-radius:4px;padding:7px;margin:6px 0;color:#d5dae1;white-space:pre-wrap}.gameCard{width:min(1100px,94vw);height:min(760px,88vh);background:#111318;border:1px solid #4b515c;border-radius:8px;box-shadow:0 25px 70px #000d;display:flex;flex-direction:column;overflow:hidden}.gameHead{height:44px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;background:#20242b;border-bottom:1px solid #3d424b}.gameHead button{padding:6px 12px}.gameCard #gameHost{flex:1;display:grid;place-items:center;overflow:hidden;background:#0e1013}.gameCard canvas{max-width:96%;max-height:92%;width:auto;height:auto;box-shadow:0 12px 40px #000}
+@media(max-width:1000px){#main{grid-template-columns:66px minmax(300px,1fr) 260px}.codeLayout{grid-template-columns:1fr}.apiHelp{display:none}}
+
+.libList::-webkit-scrollbar{width:12px}.libList::-webkit-scrollbar-thumb{background:#505762;border-radius:8px}.libList::-webkit-scrollbar-track{background:#171a1f}.canvaswrap{user-select:none}/* Settings themes/density */
+body[data-theme="light"]{--bg:#e7e9ed;--panel:#f3f4f6;--panel2:#fff;--line:#c9ced6;--text:#1d232b;--muted:#5e6875}
+body[data-theme="light"] #top,body[data-theme="light"] #bottom,body[data-theme="light"] #workspace,body[data-theme="light"] #tools,body[data-theme="light"] #inspector{background:#f1f3f6;color:#1d232b}
+body[data-theme="light"] button,body[data-theme="light"] input,body[data-theme="light"] select,body[data-theme="light"] textarea{background:#fff;color:#1d232b;border-color:#bcc3cd}
+body[data-density="spacious"] button{padding:10px 14px}body[data-density="spacious"] .tool{min-height:64px}body[data-density="spacious"] .workbar{gap:12px;padding:10px 14px}
+body[data-density="compact"] button{padding:6px 9px}body[data-density="compact"] .tool{min-height:50px}body[data-density="compact"] .workbar{gap:6px;padding:5px 8px}
+
+/* Flashing v11: accessible light theme + real UI localization */
+body[data-theme="light"]{--bg:#e8ecf2;--panel:#f5f7fa;--panel2:#ffffff;--line:#c6cdd7;--text:#1f2630;--muted:#5c6775;--accent:#d58b00;--blue:#1672c8;--danger:#c73b3b;background:var(--bg);color:var(--text)}
+body[data-theme="light"] #top{background:#ffffff!important;color:#1f2630!important;border-bottom:1px solid #c8ced7!important;box-shadow:0 2px 8px #0001!important}
+body[data-theme="light"] #top .brand{color:#20262f!important}.brand span{color:var(--accent)}
+body[data-theme="light"] #top button,body[data-theme="light"] button{background:#ffffff!important;color:#1f2630!important;border-color:#b9c1cc!important;box-shadow:0 1px 1px #00000008}
+body[data-theme="light"] #top button:hover,body[data-theme="light"] button:hover{background:#eef2f6!important}
+body[data-theme="light"] button.active{background:#fff4d8!important;border-color:var(--accent)!important;outline:1px solid var(--accent)!important}
+body[data-theme="light"] #main{background:#e8ecf2!important}
+body[data-theme="light"] #tools{background:#f5f7fa!important;border-color:#c6cdd7!important}
+body[data-theme="light"] .tool{color:#26303b!important}.tool small{color:var(--muted)}
+body[data-theme="light"] #workspace{background:#e8ecf2!important}
+body[data-theme="light"] .workbar{background:#f7f9fb!important;border-color:#c7ced8!important}
+body[data-theme="light"] .workbar input,body[data-theme="light"] .workbar select{background:#fff!important;color:#1f2630!important;border-color:#b8c1cd!important}
+body[data-theme="light"] .canvaswrap{background-color:#dfe4eb!important;background-image:linear-gradient(#cbd2dc 1px,transparent 1px),linear-gradient(90deg,#cbd2dc 1px,transparent 1px),radial-gradient(circle at center,#eef1f5 0,#e0e5eb 55%,#d6dce4 100%)!important}
+body[data-theme="light"] #stageBox{box-shadow:0 8px 28px #0003!important;border-color:#aeb7c3!important}
+body[data-theme="light"] #inspector{background:#f5f7fa!important;border-color:#c6cdd7!important;color:#1f2630!important}
+body[data-theme="light"] .panelTitle{background:#eef1f5!important;color:#26303b!important;border-color:#c6cdd7!important}
+body[data-theme="light"] .field input,body[data-theme="light"] .field select,body[data-theme="light"] .field textarea{background:#fff!important;color:#1f2630!important;border-color:#b8c1cd!important}
+body[data-theme="light"] .hint,body[data-theme="light"] .field label{color:#5c6775!important}
+body[data-theme="light"] #bottom{background:#f3f5f8!important;border-color:#aeb7c2!important;box-shadow:0 -6px 20px #0002!important}
+body[data-theme="light"] .library{background:#f7f9fb!important;border-color:#c6cdd7!important}
+body[data-theme="light"] .libraryActions{background:#f7f9fb!important;border-color:#c6cdd7!important}
+body[data-theme="light"] .libItem:hover,body[data-theme="light"] .libItem.sel{background:#e6edf5!important}
+body[data-theme="light"] .icon{background:#fff!important;border-color:#b8c1cd!important}
+body[data-theme="light"] #timeline{background:#f3f5f8!important}
+body[data-theme="light"] .timelineTop{background:#eef1f5!important;border-color:#c2c9d3!important}
+body[data-theme="light"] .timelineTop input{background:#fff!important;color:#1f2630!important;border-color:#b8c1cd!important}
+body[data-theme="light"] .timelineScroll{background:#e9edf2!important}
+body[data-theme="light"] .numbers{background:#f4f6f9!important;border-color:#cbd1d9!important}
+body[data-theme="light"] .numbers>div{color:#56616e!important;border-color:#d3d8df!important}
+body[data-theme="light"] .layerRow{border-color:#d3d8df!important}.layerName{background:#f7f9fb!important;color:#1f2630!important;border-color:#d0d6de!important}
+body[data-theme="light"] .layerName input{background:#fff!important;color:#1f2630!important;border-color:#b8c1cd!important}
+body[data-theme="light"] .cell{border-color:#d5dae1!important}body[data-theme="light"] .cell.key:after{background:#7d8794}body[data-theme="light"] .cell.key.active:after{background:var(--accent)}
+body[data-theme="light"] .topMenuPanel{background:#fff!important;border-color:#c1c8d2!important;box-shadow:0 14px 35px #0002!important}
+body[data-theme="light"] .modal{background:#0006!important}body[data-theme="light"] .modalCard,body[data-theme="light"] .newCard,body[data-theme="light"] .settingsCard{background:#f7f9fb!important;color:#1f2630!important;border-color:#c1c8d2!important;box-shadow:0 20px 70px #0004!important}
+body[data-theme="light"] .settingsHead{background:#eef1f5!important;border-color:#c6cdd7!important}body[data-theme="light"] .settingsNav{background:#f0f3f7!important;border-color:#c6cdd7!important}
+body[data-theme="light"] .settingsNav button{color:#2a333e!important}body[data-theme="light"] .settingsNav button.active{background:#fff4d8!important;border-color:#d9a02a!important}
+body[data-theme="light"] .settingsContent{background:#f7f9fb!important}body[data-theme="light"] .settingsField{background:#fff!important;border-color:#cbd2db!important}
+body[data-theme="light"] .settingsField input,body[data-theme="light"] .settingsField select{background:#fff!important;color:#1f2630!important;border-color:#b8c1cd!important}
+body[data-theme="light"] .settingsActions{background:#eef1f5!important;border-color:#c6cdd7!important}
+body[data-theme="light"] .settingsField label,body[data-theme="light"] .settingsHint{color:#5c6775!important}
+body[data-theme="light"] .soundWave{background:#eef2f6!important;border-color:#b8c1cd!important}
+body[data-theme="light"] .toast{background:#fff!important;color:#1f2630!important;border-color:#b8c1cd!important;box-shadow:0 8px 24px #0002!important}
+body[data-theme="light"] .codebox{background:#fff!important;color:#1f2630!important;border-color:#b8c1cd!important}
+body[data-theme="light"] .dropReady:after{background:#fffc!important;color:#1f2630!important}
+body[data-theme="light"] .dangerBtn{border-color:#c96b6b!important;color:#8f2222!important}
+
+
+/* v12: coherent light theme for every settings/modal surface */
+body[data-theme="light"] .modalCard,
+body[data-theme="light"] .newCard,
+body[data-theme="light"] .settingsCard,
+body[data-theme="light"] .codeCard,
+body[data-theme="light"] .gameCard,
+body[data-theme="light"] .publishCard{color:#1f2630!important}
+body[data-theme="light"] .settingsHead,
+body[data-theme="light"] .settingsHead h2,
+body[data-theme="light"] .settingsHead p,
+body[data-theme="light"] .settingsContent,
+body[data-theme="light"] .settingsSection,
+body[data-theme="light"] .settingsSection h3,
+body[data-theme="light"] .settingsSection>p,
+body[data-theme="light"] .settingsField,
+body[data-theme="light"] .settingsField label,
+body[data-theme="light"] .settingsField .checkLabel,
+body[data-theme="light"] .settingsHint,
+body[data-theme="light"] .settingsNav,
+body[data-theme="light"] .settingsNav button,
+body[data-theme="light"] .settingsActions,
+body[data-theme="light"] .settingsActions button{color:#1f2630!important}
+body[data-theme="light"] .settingsHead{background:#eef1f5!important}
+body[data-theme="light"] .settingsNav{background:#f0f3f7!important}
+body[data-theme="light"] .settingsNav button{background:transparent!important;border-color:transparent!important}
+body[data-theme="light"] .settingsNav button.active{background:#fff4d8!important;color:#1f2630!important;border-color:#d9a02a!important}
+body[data-theme="light"] .settingsContent{background:#f7f9fb!important}
+body[data-theme="light"] .settingsField{background:#fff!important}
+body[data-theme="light"] .settingsActions{background:#eef1f5!important}
+body[data-theme="light"] .settingsActions .settingsDanger{color:#8f2222!important}
+body[data-theme="light"] .settingsField input,
+body[data-theme="light"] .settingsField select,
+body[data-theme="light"] .settingsField textarea{color:#1f2630!important;background:#fff!important}
+body[data-theme="light"] .settingsField input[type="color"]{padding:2px!important}
+body[data-theme="light"] .codeHead,
+body[data-theme="light"] .codeHead h2,
+body[data-theme="light"] .codeSub,
+body[data-theme="light"] .apiHelp{color:#1f2630!important}
+body[data-theme="light"] .topMenuPanel button{color:#1f2630!important}
+body[data-theme="light"] .toast{color:#1f2630!important}
+
+/* v13: dark theme isolation — light-theme rules must never leak into dark mode */
+body[data-theme="dark"] .settingsCard{background:#1b1e23!important;color:#e9ecf1!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .settingsHead{background:#171a1f!important;color:#e9ecf1!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .settingsHead h2{color:#f1f3f6!important}
+body[data-theme="dark"] .settingsHead p{color:#9fa8b5!important}
+body[data-theme="dark"] .settingsHead button{background:#252a31!important;color:#e9ecf1!important;border-color:#3c424c!important}
+body[data-theme="dark"] .settingsNav{background:#15181c!important;border-color:#343a43!important}
+body[data-theme="dark"] .settingsNav button{background:transparent!important;color:#b9c1cc!important;border-color:transparent!important}
+body[data-theme="dark"] .settingsNav button:hover{background:#24282e!important;color:#fff!important}
+body[data-theme="dark"] .settingsNav button.active{background:#2b3037!important;color:#fff!important;border-color:#ffb52e!important}
+body[data-theme="dark"] .settingsContent{background:#1b1e23!important;color:#e9ecf1!important}
+body[data-theme="dark"] .settingsSection{color:#e9ecf1!important}
+body[data-theme="dark"] .settingsSection h3{color:#f0f2f5!important}
+body[data-theme="dark"] .settingsSection>p{color:#9fa8b5!important}
+body[data-theme="dark"] .settingsField{background:#181b20!important;border-color:#343a43!important;color:#e9ecf1!important}
+body[data-theme="dark"] .settingsField label,body[data-theme="dark"] .settingsField .checkLabel,body[data-theme="dark"] .settingsHint{color:#aeb6c1!important}
+body[data-theme="dark"] .settingsField input,body[data-theme="dark"] .settingsField select,body[data-theme="dark"] .settingsField textarea{background:#0f1216!important;color:#eef1f5!important;border-color:#3b424c!important}
+body[data-theme="dark"] .settingsActions{background:#15181c!important;border-color:#343a43!important}
+body[data-theme="dark"] .settingsActions button{background:#252a31!important;color:#e9ecf1!important;border-color:#3c424c!important}
+body[data-theme="dark"] .settingsActions button:hover{background:#30353d!important}
+body[data-theme="dark"] .settingsActions .settingsDanger{color:#ff9292!important;border-color:#7a3c3c!important}
+body[data-theme="dark"] .settingsCard input[type="checkbox"]{accent-color:#ffb52e}
+body[data-theme="dark"] .settingsCard input[type="range"]{accent-color:#ffb52e}
+body[data-theme="dark"] .soundWave{background:#171a1f!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .codebox{background:#101318!important;color:#e9ecf1!important;border-color:#3c424c!important}
+</style>
+</head>
+<body>
+<div id="app">
+<header id="top">
+  <div class="brand">Flashing<span>◆</span></div>
+  <div class="topGroup">
+    <button id="newBtn" data-i18n="nav.new">Nuevo</button>
+    <button id="openBtn" data-i18n="nav.open">Abrir</button>
+    <div class="topMenu">
+      <button data-i18n="nav.importMenu">Importar ▾</button>
+      <div class="topMenuPanel">
+        <button id="importAssetsBtn" data-i18n="nav.importAssets">🖼 Imágenes y sonidos</button>
+        <button id="importProjectMenuBtn" data-i18n="nav.importProject">📁 Proyecto de Flashing</button>
+              </div>
+    </div>
+    <button id="fontBtn" data-i18n="nav.fonts">Fuentes</button><button id="codeBtn" data-i18n="nav.code">Código</button><button id="testBtn" data-i18n="nav.test">▶ Probar película</button><button id="exportGameBtn" data-i18n="nav.exportGame">Exportar juego y publicar</button><button id="panelsBtn" data-i18n="nav.panels">Paneles</button><button id="settingsBtn" data-i18n="nav.settings">⚙ Configuración</button>
+  </div>
+  <div class="sep"></div>
+  <div class="topGroup"><button id="undoBtn" title="Deshacer" data-i18n-title="nav.undo">↶</button><button id="redoBtn" title="Rehacer" data-i18n-title="nav.redo">↷</button></div>
+  <div class="spacer"></div>
+  <div class="status" id="docStatus">Documento nuevo</div>
+  <div class="sep"></div><button id="helpBtn">?</button>
+</header>
+<section id="main">
+  <aside id="tools">
+    <button class="tool active" data-tool="select"><b>↖</b><small data-i18n="tool.select">Selec.</small></button>
+    <button class="tool" data-tool="rect"><b>□</b><small data-i18n="tool.rect">Rect.</small></button>
+    <button class="tool" data-tool="circle"><b>○</b><small data-i18n="tool.circle">Círculo</small></button>
+    <button class="tool" data-tool="line"><b>╱</b><small data-i18n="tool.line">Línea</small></button>
+    <button class="tool" data-tool="brush"><b>✎</b><small data-i18n="tool.brush">Lápiz</small></button>
+    <button class="tool" data-tool="text"><b>T</b><small data-i18n="tool.text">Texto</small></button>
+    <button class="tool" data-tool="image"><b>▣</b><small data-i18n="tool.image">Imagen</small></button>
+    <button class="tool" data-tool="sound"><b>♪</b><small data-i18n="tool.sound">Sonido</small></button>
+    <button class="tool" data-tool="hand"><b>✋</b><small data-i18n="tool.hand">Mano</small></button>
+  </aside>
+  <main id="workspace">
+    <div class="workbar">
+      <label data-i18n="workbar.stage">Escenario</label><input id="stageW" type="number" min="200" max="1920" value="960"><span>×</span><input id="stageH" type="number" min="150" max="1200" value="540">
+      <label data-i18n="field.fps">FPS</label><input id="fps" type="number" min="1" max="60" value="24">
+      <label data-i18n="workbar.zoom">Zoom</label><select id="zoom"><option value="0.5">50%</option><option value="0.75" selected>75%</option><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select>
+      <div class="spacer"></div><span class="viewReadout" id="viewReadout">Vista X: 0 · Y: 0</span><button id="centerViewBtn" data-i18n="workbar.center">⊙ Centrar vista</button><button id="playBtn" data-i18n="workbar.play">▶ Reproducir</button><button id="stopBtn" data-i18n="workbar.stop">■ Detener</button>
+    </div>
+    <div class="canvaswrap" id="canvasWrap"><div id="stageBox"><canvas id="stage" width="960" height="540"></canvas></div></div>
+  </main>
+  <aside id="inspector"><div class="panelTitle" data-i18n="panel.properties">Propiedades</div><div class="insBody" id="inspectorBody"></div></aside>
+</section>
+<section id="bottom">
+  <section class="library"><div class="panelTitle" data-i18n="panel.library">Biblioteca</div>
+  <div class="libraryActions"><button id="addAssetBtn" data-i18n="lib.addImage">＋ Imagen</button><button id="addSoundBtn" data-i18n="lib.addSound">＋ Sonido</button><button id="importAnyBtn" data-i18n="lib.import">＋ Importar</button></div>
+  <div class="hintBox" data-i18n-html="lib.hint">Arrastra archivos desde tu laptop aquí, o usa <b>Importar</b>. Flashing acepta imágenes, sonidos y proyectos.</div><div class="libList" id="libList"></div></section>
+  <section id="timeline">
+  <div class="timelineTop">
+    <div class="timelineGroup"><span class="timelineGroupLabel" data-i18n="tl.layers">CAPAS</span><button id="addLayerBtn" data-i18n="tl.addLayer">＋ Capa</button><button id="delLayerBtn" class="dangerBtn" data-i18n="tl.delLayer">− Capa</button></div>
+    <div class="timelineGroup"><span class="timelineGroupLabel" data-i18n="tl.frames">FOTOGRAMAS</span><button id="prevFrame">◀</button><button id="nextFrame">▶</button><button id="addFrame" data-i18n="tl.addFrame">＋ Fotograma</button><button id="addFrameAfter" data-i18n="tl.addFrameEnd">＋ Al final</button><button id="addKey" data-i18n="tl.addKey">◆ Clave</button><button id="deleteFrame" class="dangerBtn" data-i18n="tl.deleteFrame">− Eliminar</button><button id="clearFrame" data-i18n="tl.clear">× Limpiar</button><button id="onionBtn" class="miniBtn" data-i18n="tl.onion">◉ Cebolla</button><button id="playFrameSound" class="miniBtn" data-i18n="tl.playSound">♫ Sonido</button></div>
+    <div class="timelineGroup"><span class="timelineGroupLabel" data-i18n="tl.panel">PANEL</span><button id="toggleLibraryBtn" class="miniBtn" data-i18n="panel.library">Biblioteca</button><button id="toggleInspectorBtn" class="miniBtn" data-i18n="panel.properties">Propiedades</button><button id="moveTimelineBtn" class="miniBtn" data-i18n="tl.move">↕ Mover</button></div><div class="timelineGroup"><span class="timelineGroupLabel" data-i18n="tl.current">ACTUAL</span><input id="frameInput" type="number" value="1" min="1" max="999"><span style="font-size:11px;color:#aeb5c0">/ <b id="frameCount">48</b></span></div>
+  </div>
+  <div class="timelineScroll"><div class="timelineGrid" id="timelineGrid"></div></div>
+</section>
+</section>
+</div>
+<input id="fileInput" type="file" accept=".flasng,.flashing,.flproj,.json">
+<input id="audioInput" type="file" accept="audio/*">
+<input id="assetInput" type="file" multiple accept="image/*,audio/*,.flasng,.flashing,.flproj,.json,">
+<input id="fontInput" type="file" multiple accept=".otf,.tf" style="display:none">
+
+
+
+<div class="modal" id="codeModal"><div class="codeCard"><div class="codeHead"><div><h2 data-i18n="modal.code.title">Código de acciones</h2><div class="codeSub" data-i18n="modal.code.sub">JavaScript de juego de Flashing · se guarda dentro del proyecto</div></div><div class="codeActions"><button id="codeHelpBtn">API</button><button id="saveCodeBtn" data-i18n="modal.code.save">Guardar código</button><button id="closeCodeBtn" data-i18n="common.close">Cerrar</button></div></div><div class="codeLayout"><textarea id="gameCode" spellcheck="false" placeholder="// Código del juego
+Flashing.onStart = function(){
+  // se ejecuta al iniciar
+};
+
+Flashing.onFrame = function(){
+  // se ejecuta cada fotograma
+};"></textarea><div class="apiHelp" id="apiHelp"><b data-i18n="modal.code.apiTitle">API del motor</b><code>Flashing.onStart = function(){}</code><code>Flashing.onFrame = function(dt){}</code><code>Flashing.onKeyDown = function(key){}</code><code>Flashing.onKeyUp = function(key){}</code><code>Flashing.onClick(id, function(obj){})</code><code>Flashing.getObject(id)</code><code>Flashing.findObject(nombre)</code><code>Flashing.createRect(x,y,w,h)</code><code>Flashing.createButton(x,y,w,h,"Jugar")</code><code>Flashing.setPosition(id,x,y)</code><code>Flashing.move(id,dx,dy)</code><code>Flashing.scale(id,sx,sy)</code><code>Flashing.setRotation(id,grados)</code><code>Flashing.collides(a,b)</code><code>Flashing.enablePhysics(id, opciones)</code><code>Flashing.gravity = 900</code><code>Flashing.velocity(id).x / .y</code><code>Flashing.vars.puntos = 0</code><code>Flashing.playSound("sonido.mp3")</code><code>Flashing.camera.x / .y / .zoom</code><code>Flashing.createScene("Menu")</code><code>Flashing.goToScene("Juego")</code><code>Flashing.frame / Flashing.fps</code><code>Flashing.mouseX / mouseY</code><code>Flashing.play() / stop()</code></div></div></div></div>
+<div class="modal" id="gameModal"><div class="gameCard"><div class="gameHead"><b id="gameTitle" data-i18n="modal.game.title">Prueba de juego</b><button id="closeGameBtn" data-i18n="common.close">Cerrar</button></div><div id="gameHost"></div></div></div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="newModal"><div class="newCard"><h2 data-i18n="modal.new.title">Nuevo archivo</h2><div class="newGrid"><div><label data-i18n="field.projectName">Nombre del proyecto</label><input id="newName" value="Sin título"></div><div><label data-i18n="field.fps">FPS</label><input id="newFps" type="number" min="1" max="60" value="24"></div><div><label data-i18n="field.width">Ancho</label><input id="newW" type="number" min="200" max="1920" value="960"></div><div><label data-i18n="field.height">Alto</label><input id="newH" type="number" min="150" max="1200" value="540"></div><div><label data-i18n="field.frames">Fotogramas iniciales</label><input id="newFrames" type="number" min="1" max="999" value="48"></div></div><div class="newActions"><button id="cancelNew" data-i18n="common.cancel">Cancelar</button><button id="createNew" data-i18n="modal.new.create">Crear archivo</button></div></div></div>
+<div class="modal" id="panelsModal"><div class="modalCard"><h2 data-i18n="modal.panels.title">Personalizar paneles</h2><p class="hint" data-i18n="modal.panels.hint">Cambia la posición y el tamaño de la caja de la línea de tiempo. Los cambios se guardan en este navegador.</p><h3 style="font-size:13px;margin:14px 0 8px" data-i18n="modal.panels.timeline">Línea de tiempo</h3><div class="newGrid"><div><label data-i18n="field.x">X</label><input id="panelX" type="number"></div><div><label data-i18n="field.y">Y</label><input id="panelY" type="number"></div><div><label data-i18n="field.width">Ancho</label><input id="panelW" type="number" min="420"></div><div><label data-i18n="field.height">Alto</label><input id="panelH" type="number" min="180"></div></div><h3 style="font-size:13px;margin:14px 0 8px" data-i18n="modal.panels.sidebars">Ancho de paneles laterales</h3><div class="newGrid"><div><label data-i18n="panel.library">Biblioteca</label><input id="libraryW" type="number" min="180" max="700"></div><div><label data-i18n="panel.properties">Propiedades</label><input id="inspectorW" type="number" min="220" max="700"></div></div><div class="newActions"><button id="resetPanels" data-i18n="common.reset">Restaurar</button><button id="cancelPanels" data-i18n="common.cancel">Cancelar</button><button id="applyPanels" data-i18n="common.apply">Aplicar</button></div></div></div>
+<div class="modal" id="publishModal"><div class="modalCard"><h2 data-i18n="modal.publish.title">Exportar juego y publicar</h2><p class="hint" data-i18n-html="modal.publish.hint">Exporta todo el proyecto a un archivo <b>.flasng</b> de Flashing. El archivo contiene escenas, animaciones, objetos, figuras, imágenes, sonidos, textos y el JavaScript convertido al lenguaje interno FLASNG.</p><textarea class="codebox" id="exportCode" spellcheck="false" readonly></textarea><div class="row" style="margin-top:8px"><button id="copyCode" data-i18n="modal.publish.copy">Copiar archivo</button><button id="downloadGame" data-i18n="modal.publish.download">Exportar .flasng</button><button id="closeModal" data-i18n="common.close">Cerrar</button></div></div></div>
+<div class="modal" id="settingsModal"><div class="settingsCard">
+  <div class="settingsHead"><div><h2 data-i18n="settings.title">Configuración</h2><p data-i18n="settings.subtitle">Personaliza Flashing a tu gusto. Los cambios se guardan en este navegador.</p></div><button id="closeSettingsBtn" data-i18n="common.close">Cerrar</button></div>
+  <div class="settingsBody">
+    <nav class="settingsNav">
+      <button class="settingsNavBtn active" data-section="general" data-i18n="settings.nav.general">General</button>
+      <button class="settingsNavBtn" data-section="project" data-i18n="settings.nav.project">Proyecto</button>
+      <button class="settingsNavBtn" data-section="edit" data-i18n="settings.nav.edit">Edición</button>
+      <button class="settingsNavBtn" data-section="sound" data-i18n="settings.nav.sound">Sonido</button>
+    </nav>
+    <div class="settingsContent">
+      <section class="settingsSection active" data-section="general">
+        <h3 data-i18n="settings.general.title">General</h3>
+        <div class="settingsField"><label data-i18n="settings.language">Idioma</label><select id="cfgLanguage"><option value="es">Español</option><option value="en">English</option></select></div>
+        <div class="settingsField"><label data-i18n="settings.theme">Tema</label><select id="cfgTheme"><option value="system" data-i18n="settings.theme.system">Predeterminado del dispositivo</option><option value="dark" data-i18n="settings.theme.dark">Oscuro</option><option value="light" data-i18n="settings.theme.light">Claro</option></select></div>
+        <div class="settingsField"><label class="checkLabel"><input type="checkbox" id="cfgAutosave"><span data-i18n="settings.autosave">Autoguardar el proyecto en este navegador</span></label></div>
+      </section>
+      <section class="settingsSection" data-section="project">
+        <h3 data-i18n="settings.project.title">Proyecto</h3>
+        <p data-i18n="settings.project.hint">Valores predeterminados usados al crear un archivo nuevo.</p>
+        <div class="grid2">
+          <div class="settingsField"><label data-i18n="field.fps">FPS</label><input id="cfgFps" type="number" min="1" max="60"></div>
+          <div class="settingsField"><label data-i18n="field.frames">Fotogramas iniciales</label><input id="cfgFrames" type="number" min="1" max="999"></div>
+          <div class="settingsField"><label data-i18n="field.width">Ancho del escenario</label><input id="cfgStageW" type="number" min="200" max="1920"></div>
+          <div class="settingsField"><label data-i18n="field.height">Alto del escenario</label><input id="cfgStageH" type="number" min="150" max="1200"></div>
+        </div>
+        <div class="settingsField"><label data-i18n="settings.stageBg">Color de fondo del escenario</label><input id="cfgStageBg" type="color"></div>
+      </section>
+      <section class="settingsSection" data-section="edit">
+        <h3 data-i18n="settings.edit.title">Edición</h3>
+        <div class="settingsField"><label class="checkLabel"><input type="checkbox" id="cfgGridSnap"><span data-i18n="settings.gridSnap">Ajustar a la cuadrícula</span></label></div>
+        <div class="grid2">
+          <div class="settingsField"><label data-i18n="settings.gridSize">Tamaño de cuadrícula</label><input id="cfgGridSize" type="number" min="2" max="200"></div>
+          <div class="settingsField"><label data-i18n="settings.decimals">Decimales</label><input id="cfgDecimals" type="number" min="0" max="6"></div>
+        </div>
+        <div class="settingsField"><label class="checkLabel"><input type="checkbox" id="cfgConfirmDelete"><span data-i18n="settings.confirmDelete">Confirmar antes de eliminar objetos</span></label></div>
+        <div class="settingsField"><label data-i18n="settings.history">Pasos de deshacer (historial)</label><input id="cfgHistory" type="number" min="5" max="200"></div>
+      </section>
+      <section class="settingsSection" data-section="sound">
+        <h3 data-i18n="settings.sound.title">Sonido</h3>
+        <div class="grid2">
+          <div class="settingsField"><label data-i18n="settings.volumeDefault">Volumen predeterminado</label><input id="cfgVolumeDefault" type="number" min="0" max="100"></div>
+          <div class="settingsField"><label data-i18n="settings.volumeMax">Volumen máximo</label><input id="cfgVolumeMax" type="number" min="1" max="100"></div>
+        </div>
+        <div class="settingsField"><label class="checkLabel"><input type="checkbox" id="cfgSoundPreview"><span data-i18n="settings.soundPreview">Previsualizar sonido al seleccionarlo en la Biblioteca</span></label></div>
+      </section>
+    </div>
+  </div>
+  <div class="settingsActions">
+    <button id="resetSettingsBtn" class="settingsDanger" data-i18n="settings.reset">Restaurar predeterminados</button>
+    <div class="spacer"></div>
+    <button id="cancelSettingsBtn" data-i18n="common.cancel">Cancelar</button>
+    <button id="applySettingsBtn" data-i18n="settings.apply">Aplicar</button>
+  </div>
+</div></div>
+<script>
+const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)]; const memoryStorage={}; const storage={getItem(k){try{if(window.storage&&typeof window.storage.getItem==='function')return window.storage.getItem(k);const v=localStorage.getItem(k);return v??memoryStorage[k]??null}catch{return memoryStorage[k]??null}},setItem(k,v){try{if(window.storage&&typeof window.storage.setItem==='function'){window.storage.setItem(k,v);return}localStorage.setItem(k,v)}catch{}memoryStorage[k]=v},removeItem(k){try{if(window.storage&&typeof window.storage.removeItem==='function'){window.storage.removeItem(k);return}localStorage.removeItem(k)}catch{}delete memoryStorage[k]}};
+const canvas=$('#stage'), ctx=canvas.getContext('2d'), canvasWrap=$('#canvasWrap');
+let doc={name:'Sin título',width:960,height:540,fps:24,totalFrames:48,background:'#ffffff',layers:[],assets:[]};
+let tool='select', selected=null, currentLayer=0, currentFrame=1, zoom=1, playing=false, playTimer=null, drag=null, history=[], future=[]; let resizeDrag=null; let moveHistorySaved=false; let gameKeys={}; let gameMouse={x:0,y:0}; let selectedAssetId=null; let viewX=0,viewY=0,viewDragging=false,viewStart={x:0,y:0},viewOrigin={x:0,y:0},spaceDown=false,onionSkin=false,previewAudios=[];
+function uid(){return Math.random().toString(36).slice(2,9)}
+function snapshot(){return JSON.stringify(doc)} function pushHistory(){history.push(snapshot()); const limit=Math.max(1,Number((typeof CFG!=='undefined'&&CFG.history)||30)); if(history.length>limit)history.splice(0,history.length-limit); future=[]}
+function restore(s){doc=JSON.parse(s); selected=null; currentLayer=Math.min(currentLayer,Math.max(0,doc.layers.length-1)); renderAll()}
+function toast(t){let el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),1800)}
+function init(){
+ doc.layers=[{id:uid(),name:'Capa 1',frames:{}}]; doc.assets=[]; doc.customFonts=[]; doc.code=''; doc.engine={version:1}; renderAll(); draw();
+}
+function activeLayer(){return doc.layers[currentLayer]}
+function frameData(layer=currentLayer,frame=currentFrame){return activeLayer().frames[frame] || (activeLayer().frames[frame]=[])}
+function objectsAt(frame=currentFrame){let out=[];for(let l of doc.layers){let f=l.frames[frame];if(!f)continue;for(const o of f)out.push(o)}return out}
+function canvasPoint(e){let r=canvas.getBoundingClientRect();let p={x:(e.clientX-r.left)*(canvas.width/r.width),y:(e.clientY-r.top)*(canvas.height/r.height)};if(typeof CFG!=='undefined'&&CFG.gridSnap){const g=Math.max(1,Number(CFG.gridSize||20));p.x=Math.round(p.x/g)*g;p.y=Math.round(p.y/g)*g}return p}
+function bounds(o){if(o.type==='circle')return{x:o.x-o.r,y:o.y-o.r,w:o.r*2,h:o.r*2};if(o.type==='line')return{x:Math.min(o.x,o.x2),y:Math.min(o.y,o.y2),w:Math.abs(o.x2-o.x),h:Math.abs(o.y2-o.y)};if(o.type==='text')return{x:o.x,y:o.y-(o.size||28),w:Math.max(30,(o.text||'').length*(o.size||28)*.55),h:o.size||34};if(o.type==='sound')return{x:o.x-14,y:o.y-14,w:28,h:28};return{x:o.x,y:o.y,w:o.w||1,h:o.h||1}} function hit(o,p){let b=bounds(o);return p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h} function handleAt(o,p){if(!o||!['rect','image','text','circle'].includes(o.type))return null;let b=bounds(o),q=8,pts={nw:[b.x,b.y],n:[b.x+b.w/2,b.y],ne:[b.x+b.w,b.y],e:[b.x+b.w,b.y+b.h/2],se:[b.x+b.w,b.y+b.h],s:[b.x+b.w/2,b.y+b.h],sw:[b.x,b.y+b.h],w:[b.x,b.y+b.h/2]};for(const [k,v] of Object.entries(pts))if(Math.abs(p.x-v[0])<=q&&Math.abs(p.y-v[1])<=q)return k;return null}
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle=doc.background;ctx.fillRect(0,0,canvas.width,canvas.height);if(onionSkin&&!playing&&currentFrame>1){const l=activeLayer();const prev=l?.frames?.[currentFrame-1]||[];for(const o of prev)drawObj(o,false,Math.max(0,Math.min(1,Number(CFG?.onion??22)/100)))}for(let l of doc.layers){let f=l.frames[currentFrame];if(!f)continue;for(let o of f)drawObj(o,o===selected,1)}}
+function drawObj(o,isSel=false,alphaMul=1){ctx.save();ctx.globalAlpha=(o.opacity??1)*alphaMul;ctx.fillStyle=o.fill||'#4da3ff';ctx.strokeStyle=o.stroke||'#20242b';ctx.lineWidth=o.sw||2;
+ if(o.type==='rect')ctx.fillRect(o.x,o.y,o.w,o.h); else if(o.type==='button'){ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle=o.textColor||'#fff';ctx.font=`${o.fontSize||16}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(o.text||'Botón',o.x+o.w/2,o.y+o.h/2);ctx.textAlign='start';ctx.textBaseline='alphabetic'} else if(o.type==='sound'){ctx.strokeStyle='#7f8794';ctx.setLineDash([3,3]);ctx.strokeRect(o.x-12,o.y-12,24,24);ctx.setLineDash([]);ctx.fillStyle='#7f8794';ctx.font='16px Arial';ctx.fillText('♪',o.x-5,o.y+6)} else if(o.type==='circle'){ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fill();ctx.stroke()} else if(o.type==='line'){ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(o.x2,o.y2);ctx.stroke()} else if(o.type==='text'){ctx.fillStyle=o.fill||'#20242b';ctx.font=`${o.size||28}px ${o.font||'Arial'}`;ctx.fillText(o.text,o.x,o.y)} else if(o.type==='image'){let im=o.img;if(!im&&o.assetId){let a=doc.assets.find(x=>x.id===o.assetId);if(a){im=new Image();im.src=a.data;o.img=im}}if(im&&im.complete)ctx.drawImage(im,o.x,o.y,o.w,o.h);else if(im)im.onload=()=>draw()} else if(o.type==='brush'){ctx.beginPath();o.points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke()}
+ if(isSel){ctx.globalAlpha=1;ctx.strokeStyle='#ffb52e';ctx.setLineDash([5,4]);ctx.lineWidth=1.5;let b=bounds(o);ctx.strokeRect(b.x-3,b.y-3,b.w+6,b.h+6);ctx.setLineDash([]);if(['rect','image','text','circle'].includes(o.type)){ctx.fillStyle='#fff';ctx.strokeStyle='#ffb52e';for(const p of [[b.x,b.y],[b.x+b.w/2,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h/2],[b.x+b.w,b.y+b.h],[b.x+b.w/2,b.y+b.h],[b.x,b.y+b.h],[b.x,b.y+b.h/2]]){ctx.fillRect(p[0]-4,p[1]-4,8,8);ctx.strokeRect(p[0]-4,p[1]-4,8,8)}}}ctx.restore()}
+function renderAll(){canvas.width=doc.width;canvas.height=doc.height;$('#stageW').value=doc.width;$('#stageH').value=doc.height;$('#fps').value=doc.fps;$('#frameCount').textContent=doc.totalFrames;$('#docStatus').textContent=doc.name;renderInspector();renderLibrary();renderTimeline();renderOnionButton();applyZoom();draw()}
+function applyZoom(){zoom=+$('#zoom').value;$('#stageBox').style.width=doc.width*zoom+'px';$('#stageBox').style.height=doc.height*zoom+'px';canvas.style.width=doc.width*zoom+'px';canvas.style.height=doc.height*zoom+'px';updateViewTransform()} function updateViewTransform(){$('#stageBox').style.transform=`translate(calc(-50% + ${viewX}px),calc(-50% + ${viewY}px))`;const r=$('#viewReadout');if(r)r.textContent=t('workbar.view').replace('{x}',Math.round(viewX)).replace('{y}',Math.round(viewY))} function centerView(){viewX=0;viewY=0;applyZoom()}
+function fmtNum(v){const n=Number(v);if(!Number.isFinite(n))return '0';const d=typeof CFG!=='undefined'?Math.max(0,Math.min(6,Number(CFG.decimals??3))):3;return Number(n.toFixed(d)).toString()}
+function stopFrameSoundPreview(){previewAudios.forEach(a=>{try{a.pause();a.currentTime=0}catch{}});previewAudios=[]}
+function volumeBounds(){const min=typeof CFG!=='undefined'?Number(CFG.volumeMin??0):0;const max=typeof CFG!=='undefined'?Number(CFG.volumeMax??20):20;return {min:Math.min(min,max-0.0001),max:Math.max(min+0.0001,max)}}
+function clampVolume(v){const b=volumeBounds();return Math.max(b.min,Math.min(b.max,Number(v)||0))}
+function playAudioRange(a,start=0,end=a.duration,volume=10){if(!a)return null;const b=volumeBounds();const au=new Audio(a.data);au.volume=(clampVolume(volume)-b.min)/(b.max-b.min||1);const begin=Math.max(0,Number(start)||0);const stopAt=Number(end);const stop=()=>{if(Number.isFinite(stopAt)&&stopAt>begin&&au.currentTime>=stopAt){try{au.pause()}catch{};au.removeEventListener('timeupdate',stop)}};au.addEventListener('timeupdate',stop);au.addEventListener('loadedmetadata',()=>{try{au.currentTime=Math.min(begin,au.duration||begin)}catch{};au.play().catch(()=>toast('El navegador bloqueó la reproducción'))},{once:true});au.load();previewAudios.push(au);return au}
+function drawWaveform(a){const c=$('#soundWave');if(!c||!a)return;const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.fillStyle='#101217';x.fillRect(0,0,c.width,c.height);x.strokeStyle='#4da3ff';x.beginPath();const finish=buf=>{const data=buf.getChannelData(0),step=Math.max(1,Math.floor(data.length/c.width));for(let i=0;i<c.width;i++){let mn=1,mx=-1;for(let j=0;j<step;j++){const v=data[i*step+j]||0;mn=Math.min(mn,v);mx=Math.max(mx,v)}x.moveTo(i,c.height/2+mn*c.height*.44);x.lineTo(i,c.height/2+mx*c.height*.44)}x.stroke();const st=(a.start||0)/(buf.duration||1)*c.width,en=(a.end||buf.duration)/(buf.duration||1)*c.width;x.fillStyle='#ffb52e';x.globalAlpha=.18;x.fillRect(st,0,Math.max(1,en-st),c.height)};if(a._buffer){finish(a._buffer);return}fetch(a.data).then(r=>r.arrayBuffer()).then(buf=>new (window.AudioContext||window.webkitAudioContext)().decodeAudioData(buf)).then(buf=>{a._buffer=buf;a.duration=buf.duration;if(a.end==null)a.end=buf.duration;finish(buf)}).catch(()=>{x.fillStyle='#9ba3af';x.fillText('No se pudo analizar el audio',12,24)})}
+function wireSoundEditor(o){const a=doc.assets.find(x=>x.id===o.assetId);if(a){drawWaveform(a);$('#pSoundStart')?.addEventListener('change',e=>{pushHistory();o.start=Math.max(0,Number(e.target.value)||0);if(o.end<o.start)o.end=o.start;drawWaveform(a)});$('#pSoundEnd')?.addEventListener('change',e=>{pushHistory();o.end=Math.max(o.start||0,Number(e.target.value)||a.duration||0);drawWaveform(a)});$('#pVolume')?.addEventListener('change',e=>{pushHistory();o.volume=clampVolume(e.target.value)});$('#previewSelectedSound')?.addEventListener('click',()=>{stopFrameSoundPreview();playAudioRange(a,o.start??0,o.end??a.duration,o.volume??10)})}}
+function playCurrentFrameSounds(){stopFrameSoundPreview();let count=0;for(const l of doc.layers){for(const o of (l.frames[currentFrame]||[])){if(o.type!=='sound')continue;const a=doc.assets.find(x=>x.id===o.assetId);if(a){playAudioRange(a,o.start??a.start??0,o.end??a.end??a.duration,o.volume??10);count++}}}toast(count?'Reproduciendo '+count+' sonido(s) del fotograma '+currentFrame:'No hay sonidos en el fotograma '+currentFrame)}
+function renderOnionButton(){const b=$('#onionBtn');if(b){b.classList.toggle('active',onionSkin);b.textContent=onionSkin?t('tl.onionOn'):t('tl.onion')}}
+function renderSoundAssetEditor(b,a){b.innerHTML=`<div class="field"><label>Sonido seleccionado</label><input value="${escapeHtml(a.name)}" readonly></div><canvas id="soundWave" class="soundWave" width="700" height="${Number(CFG?.waveH||120)}"></canvas><div class="soundControls"><div class="field"><label>Inicio (s)</label><input id="assetStart" type="number" min="0" step="0.01" value="${fmtNum(a.start??0)}"></div><div class="field"><label>Fin (s)</label><input id="assetEnd" type="number" min="0" step="0.01" value="${fmtNum(a.end??a.duration??0)}"></div><div class="field"><label>Volumen (${fmtNum(CFG?.volumeMin??0)}–${fmtNum(CFG?.volumeMax??20)})</label><input id="assetVolume" type="number" min="${CFG?.volumeMin??0}" max="${CFG?.volumeMax??20}" step="0.01" value="${fmtNum(a.volume??CFG?.volumeDefault??10)}"></div><div class="field"><label>Acciones</label><button id="previewAsset" style="width:100%">▶ Reproducir</button></div></div><div class="hint">Los cambios de Biblioteca sirven como valores predeterminados al colocar el sonido. Cada instancia del fotograma puede modificarse por separado.</div>`;drawWaveform(a);$('#previewAsset').onclick=()=>{stopFrameSoundPreview();playAudioRange(a,a.start??0,a.end??a.duration,a.volume??10)};$('#assetStart').onchange=e=>{a.start=Math.max(0,Number(e.target.value)||0);if(a.end<a.start)a.end=a.start;drawWaveform(a)};$('#assetEnd').onchange=e=>{a.end=Math.max(a.start||0,Number(e.target.value)||a.duration||0);drawWaveform(a)};$('#assetVolume').onchange=e=>{a.volume=clampVolume(e.target.value)}}
+function renderLibrary(){let el=$('#libList');el.innerHTML='';for(let a of doc.assets){let d=document.createElement('div');d.className='libItem'+(selectedAssetId===a.id?' sel':'');d.draggable=true;d.dataset.assetId=a.id;const preview=a.type==='image'?`<img src="${a.data}" alt="">`:`<div class="icon">${a.type==='sound'?'♪':'◈'}</div>`;d.innerHTML=`${preview}<span>${escapeHtml(a.name)}</span><span class="libMeta">${a.type==='image'?'imagen':a.type==='sound'?'sonido':'recurso'}</span>`;d.addEventListener('dragstart',e=>{e.dataTransfer.setData('application/x-flashing-asset',a.id);e.dataTransfer.effectAllowed='copy'});d.onclick=()=>{selected=null;selectedAssetId=a.id;renderLibrary();renderInspector();if(a.type==='sound'){renderSoundAssetEditor($('#inspectorBody'),a);if(CFG?.soundPreview==='on')playAudioRange(a,a.start??0,a.end??a.duration,a.volume??CFG?.volumeDefault??10)}else{let found=null,li=-1;for(let i=0;i<doc.layers.length&&!found;i++){for(const fr of Object.values(doc.layers[i].frames||{})){found=fr.find(o=>o.type==='image'&&o.assetId===a.id);if(found){li=i;break}}}if(found){selected=found;currentLayer=li;selectedAssetId=null;renderInspector();draw();renderLibrary();toast('Imagen seleccionada')}else toast('Recurso seleccionado en la Biblioteca')}};el.appendChild(d)}if(!doc.assets.length)el.innerHTML='<div class="hint" style="padding:8px">'+t('lib.empty')+'</div>'}
+function fontList(){return ['Arial','Verdana','Tahoma','Trebuchet MS','Georgia','Times New Roman','Courier New','Impact','Comic Sans MS','Lucida Console','Lucida Sans','Palatino Linotype','Garamond','Book Antiqua','Century Gothic','Franklin Gothic Medium','Segoe UI','Calibri','Cambria','Candara','Consolas','Corbel','Constantia','Copperplate','Gill Sans','Helvetica','Helvetica Neue','Futura','Optima','Rockwell','Baskerville','Didot','American Typewriter','Brush Script MT','Arial Black','Arial Narrow','Century Schoolbook','Bookman','Monaco','Menlo','system-ui','sans-serif','serif','monospace',...(doc.customFonts||[]).map(x=>x.family)]}
+function renderInspector(){let b=$('#inspectorBody');if(!selected){b.innerHTML=`<div class="field"><label>Capa actual</label><input id="currentLayerName" value="${escapeHtml(activeLayer()?.name||'')}"></div><div class="hint">${t('inspector.empty')}</div>`;$('#currentLayerName')?.addEventListener('change',e=>{pushHistory();activeLayer().name=e.target.value.trim()||('Capa '+(currentLayer+1));renderAll();toast('Nombre de capa cambiado')});return}
+b.innerHTML=`<div class="field"><label>Capa actual</label><input id="currentLayerName" value="${escapeHtml(activeLayer()?.name||'')}"></div><div class="grid2"><div class="field"><label>Nombre del objeto</label><input id="pName" value="${escapeHtml(selected.name||'')}"></div><div class="field"><label>ID</label><input id="pId" value="${escapeHtml(selected.id||'')}" readonly></div></div><div class="field"><label>Tipo</label><input value="${selected.type}" disabled></div>`;
+if(selected.type==='text'){const fonts=fontList();b.innerHTML+=`<div class="field"><label>Texto</label><textarea id="pText">${escapeHtml(selected.text||'')}</textarea></div><div class="grid2"><div class="field"><label>Tamaño</label><input id="pSize" type="number" value="${fmtNum(selected.size||28)}"></div><div class="field"><label>Fuente</label><select id="pFont">${fonts.map(f=>`<option value="${escapeHtml(f)}" ${f===(selected.font||'Arial')?'selected':''}>${escapeHtml(f)}</option>`).join('')}</select></div></div>`}
+b.innerHTML+=`<div class="grid2"><div class="field"><label>X</label><input id="pX" type="number" value="${fmtNum(selected.x||0)}"></div><div class="field"><label>Y</label><input id="pY" type="number" value="${fmtNum(selected.y||0)}"></div></div>`;
+if(['rect','image','button'].includes(selected.type))b.innerHTML+=`<div class="grid2"><div class="field"><label>Ancho</label><input id="pW" type="number" min="1" value="${fmtNum(selected.w||1)}"></div><div class="field"><label>Alto</label><input id="pH" type="number" min="1" value="${fmtNum(selected.h||1)}"></div></div>`;
+if(selected.type==='circle')b.innerHTML+=`<div class="field"><label>Radio</label><input id="pR" type="number" value="${fmtNum(selected.r||1)}"></div>`;
+if(selected.type==='sound')b.innerHTML+=renderSoundObjectEditor(selected);
+if(selected.type!=='sound')b.innerHTML+=`<div class="grid2"><div class="field"><label>Relleno</label><input id="pFill" type="color" value="${selected.fill||'#4da3ff'}"></div><div class="field"><label>Opacidad</label><input id="pOpacity" type="number" min="0" max="1" step="0.01" value="${fmtNum(selected.opacity??1)}"></div></div>`;
+b.innerHTML+=`<button id="deleteObj" style="width:100%;border-color:#714040">Eliminar objeto</button>`;
+$$('[id^="p"]').forEach(i=>i.onchange=()=>{pushHistory();syncProp(i.id,i.value);draw();renderLibrary()});$('#currentLayerName')?.addEventListener('change',e=>{pushHistory();activeLayer().name=e.target.value.trim()||('Capa '+(currentLayer+1));renderAll()});$('#deleteObj').onclick=()=>deleteSelected();if(selected.type==='sound')wireSoundEditor(selected)}
+function renderSoundObjectEditor(o){const a=doc.assets.find(x=>x.id===o.assetId);return `<div class="field"><label>Sonido</label><div class="hint">${escapeHtml(a?.name||'Sonido')}</div><canvas id="soundWave" class="soundWave" width="700" height="${Number(CFG?.waveH||120)}"></canvas></div><div class="soundControls"><div class="field"><label>Inicio (s)</label><input id="pSoundStart" type="number" min="0" step="0.01" value="${fmtNum(o.start??a?.start??0)}"></div><div class="field"><label>Fin (s)</label><input id="pSoundEnd" type="number" min="0" step="0.01" value="${fmtNum(o.end??a?.end??a?.duration??0)}"></div><div class="field"><label>Volumen (${fmtNum(CFG?.volumeMin??0)}–${fmtNum(CFG?.volumeMax??20)})</label><input id="pVolume" type="number" min="${CFG?.volumeMin??0}" max="${CFG?.volumeMax??20}" step="0.01" value="${fmtNum(o.volume??CFG?.volumeDefault??10)}"></div><div class="field"><label>Previsualizar</label><button id="previewSelectedSound" style="width:100%">▶ Reproducir</button></div></div>`}
+function syncProp(id,v){if(!selected)return; if(id==='pName')selected.name=v.trim()||selected.id; if(id==='pX')selected.x=+v; if(id==='pY')selected.y=+v;if(id==='pW')selected.w=+v;if(id==='pH')selected.h=+v;if(id==='pR')selected.r=+v;if(id==='pFill')selected.fill=v;if(id==='pOpacity')selected.opacity=+v;if(id==='pText')selected.text=v;if(id==='pSize')selected.size=+v;if(id==='pFont')selected.font=v;if(id==='pSoundStart')selected.start=Math.max(0,+v||0);if(id==='pSoundEnd')selected.end=Math.max(selected.start||0,+v||0);if(id==='pVolume')selected.volume=clampVolume(v)}
+function renderTimeline(){let g=$('#timelineGrid');const fw=Math.max(18,Number(CFG?.frameW||30));const fh=Math.max(24,Number(CFG?.frameH||32));let s='<div class="numbers" style="grid-template-columns:180px repeat('+doc.totalFrames+','+fw+'px);height:'+Math.max(25,fh-7)+'px"><div>'+t('tl.header')+'</div>';for(let f=1;f<=doc.totalFrames;f++)s+=`<div>${f}</div>`;s+='</div>';doc.layers.forEach((l,li)=>{s+=`<div class="layerRow" style="grid-template-columns:180px repeat(${doc.totalFrames},${fw}px);height:${fh}px"><div class="layerName" data-li="${li}"><span>👁</span><input class="layerNameInput" data-li="${li}" value="${escapeHtml(l.name)}" title="Nombre de capa"></div>`;for(let f=1;f<=doc.totalFrames;f++){let key=!!l.frames[f];s+=`<div class="cell ${key?'key':''} ${f===currentFrame&&li===currentLayer?'active':''}" data-f="${f}" data-li="${li}"></div>`}s+='</div>'});g.innerHTML=s;g.style.minWidth=(180+Math.max(doc.totalFrames,Number(CFG?.framesBlock||80))*fw)+'px';$$('.cell').forEach(c=>c.onclick=()=>{currentLayer=+c.dataset.li;currentFrame=+c.dataset.f;$('#frameInput').value=currentFrame;selected=null;draw();renderInspector();renderTimeline()});$$('.layerNameInput').forEach(i=>{i.onchange=()=>{let li=+i.dataset.li;pushHistory();doc.layers[li].name=i.value.trim()||('Capa '+(li+1));renderTimeline();toast('Nombre de capa cambiado')};i.onclick=e=>e.stopPropagation();i.onkeydown=e=>{if(e.key==='Enter')i.blur()}});$('#frameInput').onchange=()=>{if(CFG?.stopSoundFrame!==false)stopFrameSoundPreview();currentFrame=Math.max(1,Math.min(doc.totalFrames,+$('#frameInput').value||1));$('#frameInput').value=currentFrame;selected=null;draw();renderInspector();renderTimeline()};}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function deleteSelected(){if(!selected)return;if(CFG?.confirmDelete&&!confirm('¿Eliminar el objeto seleccionado?'))return;pushHistory();let l=activeLayer();let f=l.frames[currentFrame]||[];let idx=f.indexOf(selected);if(idx<0){let fs=Object.keys(l.frames).map(Number).filter(n=>n<=currentFrame).sort((a,b)=>a-b);if(fs.length) {let ff=fs.at(-1);f=l.frames[ff];idx=f.indexOf(selected)}} if(idx>=0)f.splice(idx,1);selected=null;renderAll();toast('Objeto eliminado')}
+function ensureFrame(){let l=activeLayer();if(!l.frames[currentFrame])l.frames[currentFrame]=[];return l.frames[currentFrame]}
+function addObject(o){o.name=o.name||(`${o.type==='image'?'Imagen':o.type==='button'?'Botón':o.type==='circle'?'Círculo':o.type==='rect'?'Rectángulo':o.type==='text'?'Texto':'Objeto'}_${o.id}`);pushHistory();ensureFrame().push(o);selected=CFG?.selectOnCreate===false?null:o;draw();renderInspector();renderTimeline()}
+canvasWrap.addEventListener('dragover',e=>{if(e.dataTransfer?.types?.includes('application/x-flashing-asset')){e.preventDefault();e.dataTransfer.dropEffect='copy'}});canvasWrap.addEventListener('drop',e=>{const id=e.dataTransfer?.getData('application/x-flashing-asset');if(!id)return;e.preventDefault();const a=doc.assets.find(x=>x.id===id);if(!a)return;const r=canvas.getBoundingClientRect();const pos={x:(e.clientX-r.left)*(canvas.width/r.width),y:(e.clientY-r.top)*(canvas.height/r.height)};if(a.type==='image')placeImage(a,pos);else if(a.type==='sound'){pushHistory();const so={id:uid(),name:a.name,type:'sound',assetId:a.id,x:pos.x,y:pos.y,opacity:1,volume:a.volume??CFG?.volumeDefault??10,start:a.start??0,end:a.end??a.duration??0};ensureFrame().push(so);selected=so;renderAll();toast('Sonido añadido al fotograma '+currentFrame)}});
+canvas.addEventListener('pointerdown',e=>{let p=canvasPoint(e);if(tool==='hand')return;if(tool==='select'){let h=handleAt(selected,p);if(h){pushHistory();resizeDrag={handle:h,start:p,bounds:bounds(selected),orig:{x:selected.x,y:selected.y,w:selected.w,h:selected.h,r:selected.r}};canvas.setPointerCapture?.(e.pointerId);return}let objs=objectsAt().reverse();selected=objs.find(o=>hit(o,p))||null;drag=selected?{x:p.x,y:p.y,ox:selected.x,oy:selected.y}:null;if(selected)pushHistory();renderInspector();renderLibrary();draw();return}if(tool==='text'){addObject({id:uid(),type:'text',x:p.x,y:p.y,text:'Texto',size:CFG?.fontSize||28,font:CFG?.font||'Arial',fill:CFG?.textColor||'#20242b',opacity:CFG?.opacity??1});return}if(tool==='rect'||tool==='circle'||tool==='line'){drag={type:tool,sx:p.x,sy:p.y,x:p.x,y:p.y};return}if(tool==='brush'){drag={type:'brush',points:[p],x:p.x,y:p.y};return}if(tool==='image'){chooseImageAsset(p);return}if(tool==='sound'){chooseSound();return}});
+canvas.addEventListener('pointermove',e=>{let p=canvasPoint(e);if(resizeDrag&&selected){let d=resizeDrag,b=d.bounds,nx=p.x,ny=p.y;let min=Math.max(1,Number(CFG?.minObject||8));if(selected.type==='circle'){let dx=nx-selected.x,dy=ny-selected.y;selected.r=Math.max(min,Math.hypot(dx,dy));}else{let x=b.x,y=b.y,w=b.w,h=b.h;if(d.handle.includes('e'))w=Math.max(min,nx-b.x);if(d.handle.includes('s'))h=Math.max(min,ny-b.y);if(d.handle.includes('w')){let right=b.x+b.w;x=Math.min(nx,right-min);w=right-x}if(d.handle.includes('n')){let bottom=b.y+b.h;y=Math.min(ny,bottom-min);h=bottom-y}selected.x=x;selected.y=y;selected.w=w;selected.h=h}draw();renderInspector();return}if(!drag)return;if(tool==='select'&&selected){let dx=p.x-drag.x,dy=p.y-drag.y;selected.x=drag.ox+dx;selected.y=drag.oy+dy;draw();renderInspector();return}drag.x=p.x;drag.y=p.y;if(tool==='brush')drag.points.push(p);draw();if(['rect','circle','line','brush'].includes(tool)){ctx.save();ctx.globalAlpha=.45;ctx.setLineDash([5,5]);ctx.strokeStyle='#ffb52e';if(tool==='rect')ctx.strokeRect(drag.sx,drag.sy,drag.x-drag.sx,drag.y-drag.sy);if(tool==='circle'){ctx.beginPath();ctx.arc(drag.sx,drag.sy,Math.hypot(drag.x-drag.sx,drag.y-drag.sy),0,Math.PI*2);ctx.stroke()}if(tool==='line'){ctx.beginPath();ctx.moveTo(drag.sx,drag.sy);ctx.lineTo(drag.x,drag.y);ctx.stroke()}if(tool==='brush'){ctx.beginPath();drag.points.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.stroke()}ctx.restore()}});
+canvas.addEventListener('pointerup',e=>{if(resizeDrag){resizeDrag=null;try{canvas.releasePointerCapture(e.pointerId)}catch{};draw();renderInspector();return}if(!drag)return;let d=drag;drag=null;if(tool==='select'){return}let p=canvasPoint(e),o=null;if(tool==='rect')o={id:uid(),type:'rect',x:Math.min(d.sx,p.x),y:Math.min(d.sy,p.y),w:Math.max(Number(CFG?.minObject||1),Math.abs(p.x-d.sx)),h:Math.max(Number(CFG?.minObject||1),Math.abs(p.y-d.sy)),fill:'#4da3ff',stroke:'#20242b',sw:CFG?.line||2,opacity:CFG?.opacity??1};if(tool==='circle')o={id:uid(),type:'circle',x:d.sx,y:d.sy,r:Math.hypot(p.x-d.sx,p.y-d.sy),fill:'#4da3ff',stroke:'#20242b',sw:CFG?.line||2,opacity:CFG?.opacity??1};if(tool==='line')o={id:uid(),type:'line',x:d.sx,y:d.sy,x2:p.x,y2:p.y,stroke:'#20242b',sw:CFG?.line||3,opacity:CFG?.opacity??1};if(tool==='brush')o={id:uid(),type:'brush',points:d.points,stroke:'#20242b',sw:CFG?.brush||4,opacity:CFG?.opacity??1};if(o){pushHistory();ensureFrame().push(o);selected=CFG?.selectOnCreate===false?null:o;draw();renderInspector();renderTimeline()}});
+canvas.addEventListener('pointermove',e=>{if(tool!=='select'||resizeDrag)return;let p=canvasPoint(e),h=handleAt(selected,p);canvas.style.cursor=h?({nw:'nwse-resize',se:'nwse-resize',ne:'nesw-resize',sw:'nesw-resize',n:'ns-resize',s:'ns-resize',e:'ew-resize',w:'ew-resize'}[h]||'default'):'default'});
+$$('.tool').forEach(b=>b.addEventListener('click',()=>{$$('.tool').forEach(x=>x.classList.remove('active'));b.classList.add('active');tool=b.dataset.tool;canvas.style.cursor=tool==='hand'?'grab':tool==='select'?'default':'crosshair';if(tool!=='select'&&CFG?.keepSelection===false)selected=null;renderInspector();draw()}));
+$('#stageW').onchange=()=>{pushHistory();doc.width=Math.max(200,+$('#stageW').value);canvas.width=doc.width;renderAll()};$('#stageH').onchange=()=>{pushHistory();doc.height=Math.max(150,+$('#stageH').value);canvas.height=doc.height;renderAll()};$('#fps').onchange=()=>{pushHistory();doc.fps=Math.max(1,Math.min(Number(CFG?.maxFps||60),+$('#fps').value||24));$('#docStatus').textContent=doc.name+' · '+doc.fps+' FPS';};$('#zoom').onchange=applyZoom;$('#centerViewBtn').onclick=()=>{centerView();toast('Vista centrada')};
+$('#newBtn').onclick=()=>{ $('#newFps').value=CFG?.fps||24; $('#newW').value=CFG?.stageW||960; $('#newH').value=CFG?.stageH||540; $('#newFrames').value=CFG?.totalFrames||48; $('#newModal').classList.add('show') };
+$('#cancelNew').onclick=()=>$('#newModal').classList.remove('show');
+$('#createNew').onclick=()=>{pushHistory();doc={name:$('#newName').value.trim()||'Sin título',width:Math.max(200,+$('#newW').value||960),height:Math.max(150,+$('#newH').value||540),fps:Math.max(1,Math.min(Number(CFG?.maxFps||60),+$('#newFps').value||24)),totalFrames:Math.max(1,Math.min(999,+$('#newFrames').value||48)),background:CFG?.stageBg||'#ffffff',layers:[{id:uid(),name:'Capa 1',frames:{1:[]}}],assets:[],customFonts:[],code:'',scenes:[{name:'Main',frame:1}],engine:{version:2,features:['objects','events','physics','scenes','audio','camera']}};currentFrame=1;currentLayer=0;selected=null;$('#newModal').classList.remove('show');renderAll();toast('Documento nuevo creado')};
+$('#undoBtn').onclick=()=>{if(history.length){future.push(snapshot());restore(history.pop())}};$('#redoBtn').onclick=()=>{if(future.length){history.push(snapshot());restore(future.pop())}};
+$('#addLayerBtn').onclick=()=>{pushHistory();doc.layers.push({id:uid(),name:'Capa '+(doc.layers.length+1),frames:{}});currentLayer=doc.layers.length-1;renderAll()};$('#delLayerBtn').onclick=()=>{if(doc.layers.length>1){pushHistory();doc.layers.splice(currentLayer,1);currentLayer=Math.max(0,currentLayer-1);selected=null;renderAll()}};
+function cloneFrameObjects(src){return (src||[]).map(o=>{const c=JSON.parse(JSON.stringify(o));c.id=uid();c.name=(c.name||c.type)+'_'+c.id;return c})}
+function insertFrameAt(index){index=Math.max(1,Math.min(doc.totalFrames+1,index));pushHistory();for(const l of doc.layers){const shifted={};for(const [k,v] of Object.entries(l.frames)){const n=+k;shifted[n>=index?n+1:n]=v}l.frames=shifted;const prev=l.frames[index-1]||[];l.frames[index]=CFG?.emptyFrames===false?cloneFrameObjects(prev):[]}doc.totalFrames++;currentFrame=CFG?.frameAdvance==='stay'?Math.max(1,currentFrame):index;selected=null;$('#frameInput').value=currentFrame;renderAll();toast('Fotograma nuevo insertado')};
+$('#addFrame').onclick=()=>insertFrameAt(currentFrame+1);
+$('#addFrameAfter').onclick=()=>{insertFrameAt(doc.totalFrames+1);toast('Fotograma añadido al final')};
+$('#deleteFrame').onclick=()=>{if(doc.totalFrames<=1){toast('Debe existir al menos un fotograma');return}pushHistory();for(const l of doc.layers){const shifted={};for(const [k,v] of Object.entries(l.frames)){const n=+k;if(n<currentFrame)shifted[n]=v;else if(n>currentFrame)shifted[n-1]=v}l.frames=shifted}doc.totalFrames--;currentFrame=Math.min(currentFrame,doc.totalFrames);selected=null;renderAll();toast('Fotograma eliminado')};
+$('#addKey').onclick=()=>{pushHistory();ensureFrame();renderTimeline();draw();toast('Fotograma clave creado')};$('#clearFrame').onclick=()=>{pushHistory();delete activeLayer().frames[currentFrame];selected=null;renderAll()};$('#onionBtn').onclick=()=>{onionSkin=!onionSkin;renderOnionButton();draw()};$('#playFrameSound').onclick=playCurrentFrameSounds;$('#prevFrame').onclick=()=>{if(CFG?.stopSoundFrame!==false)stopFrameSoundPreview();currentFrame=Math.max(1,currentFrame-1);$('#frameInput').value=currentFrame;selected=null;draw();renderTimeline();renderInspector()};$('#nextFrame').onclick=()=>{if(CFG?.stopSoundFrame!==false)stopFrameSoundPreview();currentFrame=Math.min(doc.totalFrames,currentFrame+1);$('#frameInput').value=currentFrame;selected=null;draw();renderTimeline();renderInspector()};
+$('#playBtn').onclick=()=>{if(playing)return;stopFrameSoundPreview();playing=true;onionSkin=!!onionSkin;const fps=Math.max(1,Math.min(Number(CFG?.playbackMax||60),Number(doc.fps)||24));toast('Reproduciendo');playTimer=setInterval(()=>{currentFrame++;if(currentFrame>doc.totalFrames){if(CFG?.loop==='once'){currentFrame=doc.totalFrames;playing=false;clearInterval(playTimer);return}else currentFrame=1}$('#frameInput').value=currentFrame;draw();renderTimeline()},1000/fps)};$('#stopBtn').onclick=()=>{playing=false;clearInterval(playTimer);stopFrameSoundPreview();draw();toast('Reproducción detenida')};
+
+$('#toggleLibraryBtn').onclick=()=>{const b=$('.library');b.style.display=b.style.display==='none'?'flex':'none';};
+$('#toggleInspectorBtn').onclick=()=>{const b=$('#inspector');b.style.display=b.style.display==='none'?'flex':'none';};
+
+function defaultPanelLayout(){return {x:78,y:window.innerHeight-330,w:Math.max(420,window.innerWidth-78),h:330,libraryW:320,inspectorW:320}}
+function getPanelLayout(){try{return {...defaultPanelLayout(),...JSON.parse(storage.getItem('flashing.panelLayout.v8')||'{}')}}catch{return defaultPanelLayout()}}
+function applyPanelLayout(o=getPanelLayout()){const b=$('#bottom');b.classList.add('customPanel');b.style.left=o.x+'px';b.style.top=o.y+'px';b.style.width=o.w+'px';b.style.height=o.h+'px';$('.library').style.flex='0 0 '+o.libraryW+'px';$('.library').style.width=o.libraryW+'px';$('#inspector').style.flex='0 0 '+o.inspectorW+'px';$('#inspector').style.width=o.inspectorW+'px';$('#main').style.gridTemplateColumns='78px 1fr '+o.inspectorW+'px';return o}
+function openPanels(){const o=applyPanelLayout();$('#panelX').value=Math.round(o.x);$('#panelY').value=Math.round(o.y);$('#panelW').value=Math.round(o.w);$('#panelH').value=Math.round(o.h);$('#libraryW').value=Math.round(o.libraryW);$('#inspectorW').value=Math.round(o.inspectorW);$('#panelsModal').classList.add('show')}
+$('#panelsBtn').onclick=openPanels;$('#cancelPanels').onclick=()=>$('#panelsModal').classList.remove('show');$('#applyPanels').onclick=()=>{const o={x:Math.max(-window.innerWidth+220,+$('#panelX').value||0),y:Math.max(68,+$('#panelY').value||68),w:Math.max(420,+$('#panelW').value||window.innerWidth),h:Math.max(180,+$('#panelH').value||330),libraryW:Math.max(180,+$('#libraryW').value||320),inspectorW:Math.max(220,+$('#inspectorW').value||320)};storage.setItem('flashing.panelLayout.v8',JSON.stringify(o));applyPanelLayout(o);$('#panelsModal').classList.remove('show');toast('Paneles personalizados')};$('#resetPanels').onclick=()=>{storage.removeItem('flashing.panelLayout.v8');const o=defaultPanelLayout();applyPanelLayout(o);$('#panelX').value=o.x;$('#panelY').value=o.y;$('#panelW').value=o.w;$('#panelH').value=o.h;$('#libraryW').value=o.libraryW;$('#inspectorW').value=o.inspectorW;toast('Diseño restaurado')};window.addEventListener('resize',()=>{if(!storage.getItem('flashing.panelLayout.v8'))applyPanelLayout(defaultPanelLayout())});let moveTimeline=false,moveStart={x:0,y:0},movePanelOrigin={x:0,y:0};$('#moveTimelineBtn').onclick=()=>{moveTimeline=!moveTimeline;$('#moveTimelineBtn').textContent=moveTimeline?t('tl.moving'):t('tl.move');$('#bottom').style.cursor=moveTimeline?'move':'default';toast(moveTimeline?'Arrastra la barra superior de la línea de tiempo':'Modo mover desactivado')};$('.timelineTop').addEventListener('pointerdown',e=>{if(!moveTimeline)return;if(e.target.closest('button,input,select'))return;const b=$('#bottom');moveStart={x:e.clientX,y:e.clientY};movePanelOrigin={x:parseFloat(b.style.left)||0,y:parseFloat(b.style.top)||0};b.setPointerCapture?.(e.pointerId);const move=e2=>{b.style.left=(movePanelOrigin.x+e2.clientX-moveStart.x)+'px';b.style.top=(movePanelOrigin.y+e2.clientY-moveStart.y)+'px'};const up=e2=>{b.releasePointerCapture?.(e2.pointerId);b.removeEventListener('pointermove',move);b.removeEventListener('pointerup',up);const o=getPanelLayout();o.x=parseFloat(b.style.left)||0;o.y=parseFloat(b.style.top)||0;storage.setItem('flashing.panelLayout.v8',JSON.stringify(o))};b.addEventListener('pointermove',move);b.addEventListener('pointerup',up)});
+document.addEventListener('blur',e=>{if(e.target instanceof HTMLInputElement&&e.target.type==='number'){const n=Number(e.target.value);if(Number.isFinite(n))e.target.value=fmtNum(n)}},true);window.addEventListener('keydown',e=>{if(e.code==='Space')spaceDown=true});window.addEventListener('keyup',e=>{if(e.code==='Space')spaceDown=false});canvasWrap.addEventListener('pointerdown',e=>{if(tool!=='hand'&&e.button!==1&&!spaceDown)return;e.preventDefault();viewDragging=true;viewStart={x:e.clientX,y:e.clientY};viewOrigin={x:viewX,y:viewY};canvasWrap.classList.add('panning');canvasWrap.setPointerCapture?.(e.pointerId)});canvasWrap.addEventListener('pointermove',e=>{if(!viewDragging)return;viewX=viewOrigin.x+e.clientX-viewStart.x;viewY=viewOrigin.y+e.clientY-viewStart.y;updateViewTransform()});canvasWrap.addEventListener('pointerup',e=>{viewDragging=false;canvasWrap.classList.remove('panning');try{canvasWrap.releasePointerCapture(e.pointerId)}catch{}});canvasWrap.addEventListener('pointercancel',()=>{viewDragging=false;canvasWrap.classList.remove('panning')});canvasWrap.addEventListener('wheel',e=>{if(e.ctrlKey||tool==='hand'){e.preventDefault();zoom=Math.max(.25,Math.min(3,zoom*(e.deltaY<0?1.1:.9)));let opts=[.5,.75,1,1.25,1.5],best=opts.reduce((a,b)=>Math.abs(b-zoom)<Math.abs(a-zoom)?b:a);if(Math.abs(best-zoom)<.06){zoom=best;$('#zoom').value=String(best)}$('#stageBox').style.width=doc.width*zoom+'px';$('#stageBox').style.height=doc.height*zoom+'px';canvas.style.width=doc.width*zoom+'px';canvas.style.height=doc.height*zoom+'px';updateViewTransform()}},{passive:false});
+const FLASNG_FORMAT_VERSION="1";
+const FLASNG_XOR_KEY="FLASHING-FLASNG-CORE-V1";
+function flasngXor(bytes,key){
+  const k=new TextEncoder().encode(key);
+  if(!k.length)throw new Error("FLASNG XOR key vacía");
+  const out=new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++)out[i]=bytes[i]^k[i%k.length];
+  return out;
+}
+function flasngEncode(text){
+  const bytes=new TextEncoder().encode(text);
+  const out=flasngXor(bytes,FLASNG_XOR_KEY);
+  let hex="";
+  for(const b of out)hex+=b.toString(16).padStart(2,"0");
+  return hex.toUpperCase();
+}
+function buildFlasng(){
+  const source=String(doc.code||'');
+  const internal={
+    engine:'FLASNG-1',flasngFormatVersion:FLASNG_FORMAT_VERSION,crypto:'XOR-REPEATING-KEY-V1',name:doc.name,width:doc.width,height:doc.height,fps:doc.fps,totalFrames:doc.totalFrames,background:doc.background,
+    scenes:doc.scenes||[],layers:doc.layers||[],assets:doc.assets||[],customFonts:doc.customFonts||[],javascript:source,
+    features:['scenes','animation','objects','figures','images','sounds','text','fonts','events','physics','camera','javascript-source'],
+    createdBy:'Flashing',formatVersion:1
+  };
+  const raw=JSON.stringify(internal);const encoded=flasngEncode(raw);
+  const lines=['FLASNG/1','FORMAT CUSTOM REVERSIBLE','ENGINE Flashing','LANGUAGE FLASNG','CRYPTO XOR-REPEATING-KEY-V1','KEY-ID FLASHING-FLASNG-CORE-V1','PAYLOAD HEX-XOR'];
+  for(let i=0;i<encoded.length;i+=96)lines.push(encoded.slice(i,i+96));
+  lines.push('END-FLASNG');
+  // Keep the file structured and human-auditable while allowing large projects to naturally exceed 800 lines.
+  return lines.join('\n');
+}
+$('#openBtn').onclick=()=>$('#fileInput').click();$('#importProjectMenuBtn').onclick=()=>$('#fileInput').click();
+async function loadCustomFonts(){for(const f of (doc.customFonts||[])){try{const buf=await (await fetch(f.data)).arrayBuffer();const face=new FontFace(f.family,buf);await face.load();document.fonts.add(face)}catch{}}}
+async function importProjectFile(f){try{let text=await f.text();if(text.startsWith('FLASNG/1\n')){toast('Los archivos .flasng se importarán desde el futuro convertidor de Flashing');return}else if(text.startsWith('FLASHING_PROJECT_V2\n'))text=text.slice('FLASHING_PROJECT_V2\n'.length);else if(text.startsWith('FLASHING_PROJECT_V1\n'))text=text.slice('FLASHING_PROJECT_V1\n'.length);let parsed=JSON.parse(text);if(parsed.__flashingProject!==true)throw new Error('not flashing');pushHistory();doc=parsed.data||parsed;normalizeDoc();currentFrame=1;currentLayer=0;selected=null;await loadCustomFonts();renderAll();toast('Proyecto de Flashing abierto')}catch{toast('Proyecto no válido: usa archivos .flashing creados por Flashing')}}
+$('#fileInput').onchange=async e=>{const f=e.target.files[0];if(f)await importProjectFile(f);e.target.value=''};
+function normalizeDoc(){doc.layers=Array.isArray(doc.layers)?doc.layers:[];doc.customFonts=Array.isArray(doc.customFonts)?doc.customFonts:[];doc.assets=Array.isArray(doc.assets)?doc.assets:[];doc.totalFrames=Math.max(1,+doc.totalFrames||1);doc.fps=Math.max(1,Math.min(60,+doc.fps||24));doc.code=typeof doc.code==='string'?doc.code:'';doc.engine=doc.engine||{version:2,features:['objects','events','physics','scenes','audio','camera']};doc.scenes=Array.isArray(doc.scenes)?doc.scenes:[{name:'Main',frame:1}];for(const l of doc.layers){l.frames=l.frames&&typeof l.frames==='object'?l.frames:{};l.name=l.name||'Capa';for(const fr of Object.values(l.frames))for(const o of (fr||[])){o.name=o.name||o.id;if(o.type==='sound'){o.volume=clampVolume(o.volume??CFG?.volumeDefault??10);o.start=Math.max(0,Number(o.start??0));if(o.end!=null)o.end=Math.max(o.start,Number(o.end)||0)}}}}
+function handleUploadedFiles(files){[...files].forEach(async f=>{const name=f.name.toLowerCase();if(f.type.startsWith('image/')){await importImageFile(f)}else if(f.type.startsWith('audio/')){await importAudioFile(f)}else if(name.endsWith('.flashing')||name.endsWith('.flproj')||name.endsWith('.json')){await importProjectFile(f)}else toast('Tipo no compatible: '+f.name)})}
+$('#importAssetsBtn').onclick=()=>$('#assetInput').click();$('#importAnyBtn').onclick=()=>$('#assetInput').click();$('#assetInput').onchange=e=>{handleUploadedFiles(e.target.files);e.target.value=''};
+['dragenter','dragover'].forEach(ev=>window.addEventListener(ev,e=>{e.preventDefault();document.body.classList.add('dropReady')}));['dragleave','drop'].forEach(ev=>window.addEventListener(ev,e=>{e.preventDefault();document.body.classList.remove('dropReady')}));window.addEventListener('drop',e=>{if(e.dataTransfer?.files?.length)handleUploadedFiles(e.dataTransfer.files)});
+function importImageFile(f){return new Promise(resolve=>{const r=new FileReader();r.onload=()=>{const asset={id:uid(),type:'image',name:f.name,data:r.result};doc.assets.push(asset);renderLibrary();toast('Imagen añadida a la Biblioteca: '+f.name);resolve(asset)};r.readAsDataURL(f)})}
+function importAudioFile(f){return new Promise(resolve=>{const r=new FileReader();r.onload=()=>{doc.assets.push({id:uid(),type:'sound',name:f.name,data:r.result,start:0,end:null,volume:CFG?.volumeDefault??10});renderLibrary();toast('Sonido añadido: '+f.name);resolve()};r.readAsDataURL(f)})}
+$('#helpBtn').onclick=()=>toast(t('help.text'));
+function populateSettingsForm(){
+ $('#cfgLanguage').value=CFG.language==='en'?'en':'es';
+ $('#cfgTheme').value=['system','dark','light'].includes(CFG.theme)?CFG.theme:'system';
+ $('#cfgAutosave').checked=!!CFG.autosave;
+ $('#cfgFps').value=CFG.fps; $('#cfgFrames').value=CFG.totalFrames; $('#cfgStageW').value=CFG.stageW; $('#cfgStageH').value=CFG.stageH; $('#cfgStageBg').value=CFG.stageBg;
+ $('#cfgGridSnap').checked=!!CFG.gridSnap; $('#cfgGridSize').value=CFG.gridSize; $('#cfgDecimals').value=CFG.decimals; $('#cfgConfirmDelete').checked=!!CFG.confirmDelete; $('#cfgHistory').value=CFG.history;
+ $('#cfgVolumeDefault').value=CFG.volumeDefault; $('#cfgVolumeMax').value=CFG.volumeMax; $('#cfgSoundPreview').checked=CFG.soundPreview==='on';
+}
+function openSettings(){populateSettingsForm();$('#settingsModal').classList.add('show')}
+function closeSettings(){$('#settingsModal').classList.remove('show')}
+$('#settingsBtn').onclick=openSettings;
+$('#closeSettingsBtn').onclick=closeSettings;
+$('#cancelSettingsBtn').onclick=closeSettings;
+$$('.settingsNavBtn').forEach(b=>b.onclick=()=>{$$('.settingsNavBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.settingsSection').forEach(s=>s.classList.toggle('active',s.dataset.section===b.dataset.section))});
+$('#applySettingsBtn').onclick=()=>{
+ CFG.language=$('#cfgLanguage').value==='en'?'en':'es';
+ CFG.theme=$('#cfgTheme').value;
+ CFG.autosave=$('#cfgAutosave').checked;
+ CFG.fps=Math.max(1,Math.min(60,+$('#cfgFps').value||24));
+ CFG.totalFrames=Math.max(1,Math.min(999,+$('#cfgFrames').value||48));
+ CFG.stageW=Math.max(200,Math.min(1920,+$('#cfgStageW').value||960));
+ CFG.stageH=Math.max(150,Math.min(1200,+$('#cfgStageH').value||540));
+ CFG.stageBg=$('#cfgStageBg').value||'#ffffff';
+ CFG.gridSnap=$('#cfgGridSnap').checked;
+ CFG.gridSize=Math.max(2,Math.min(200,+$('#cfgGridSize').value||20));
+ CFG.decimals=Math.max(0,Math.min(6,+$('#cfgDecimals').value??3));
+ CFG.confirmDelete=$('#cfgConfirmDelete').checked;
+ CFG.history=Math.max(5,Math.min(200,+$('#cfgHistory').value||30));
+ CFG.volumeDefault=Math.max(0,+$('#cfgVolumeDefault').value||10);
+ CFG.volumeMax=Math.max(1,+$('#cfgVolumeMax').value||20);
+ CFG.soundPreview=$('#cfgSoundPreview').checked?'on':'off';
+ persistSettings();
+ applyTheme();
+ applyLanguage();
+ ensureAutosave();
+ closeSettings();
+ toast(t('settings.saved'));
+};
+$('#resetSettingsBtn').onclick=()=>{
+ Object.assign(CFG,DEFAULT_CFG);
+ persistSettings();
+ populateSettingsForm();
+ applyTheme();
+ applyLanguage();
+ ensureAutosave();
+ toast(t('settings.wasReset'));
+};
+let autosaveTimer=null;
+function ensureAutosave(){
+ clearInterval(autosaveTimer);
+ if(CFG.autosave){autosaveTimer=setInterval(()=>{try{storage.setItem('flashing.autosave.v1',JSON.stringify(doc))}catch{}},20000)}
+}
+$('#addAssetBtn').onclick=()=>chooseImageFile();$('#addSoundBtn').onclick=()=>chooseSound();
+function chooseImageAsset(pos){if(doc.assets.filter(a=>a.type==='image').length===0){chooseImageFile();toast('Importa una imagen a la Biblioteca primero');return}let a=doc.assets.find(x=>x.type==='image');placeImage(a,pos)}
+function chooseImageFile(){let inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=()=>{let f=inp.files[0];if(!f)return;importImageFile(f);inp.value=''};inp.click()}
+function placeImage(a,pos){let img=new Image();img.onload=()=>addObject({id:uid(),type:'image',x:pos.x,y:pos.y,w:Math.min(240,img.width),h:Math.min(180,img.height),fill:'#fff',opacity:1,img:img,assetId:a.id});img.src=a.data}
+function chooseSound(){let inp=$('#audioInput');inp.onchange=()=>{let f=inp.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{doc.assets.push({id:uid(),type:'sound',name:f.name,data:r.result,start:0,end:null,volume:CFG?.volumeDefault??10});renderLibrary();toast('Sonido añadido a la biblioteca')};r.readAsDataURL(f);inp.value=''};inp.click()}
+function chooseSoundFile(){chooseSound()}
+function playAsset(a){if(a.type!=='sound')return;let au=new Audio(a.data);au.play().catch(()=>toast('El navegador bloqueó la reproducción automática'))}
+function download(data,name,type){let blob=new Blob([data],{type}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+
+function defaultGameCode(){return '// FLASHING GAME CODE\\n// Motor 2D: objetos, eventos, física, colisiones, cámara, escenas, sonido y variables.\\n\\nFlashing.vars.puntos = 0;\\nFlashing.gravity = 900;\\n\\nFlashing.onStart = function(){\\n  const jugador = Flashing.findObject("Jugador");\\n  if (jugador) Flashing.enablePhysics(jugador.id, {gravity:true});\\n};\\n\\nFlashing.onFrame = function(dt){\\n  const jugador = Flashing.findObject("Jugador");\\n  if (!jugador) return;\\n  if (Flashing.keyDown("ArrowRight")) Flashing.move(jugador.id, 240 * dt, 0);\\n  if (Flashing.keyDown("ArrowLeft")) Flashing.move(jugador.id, -240 * dt, 0);\\n};\\n\\nFlashing.onClick("BotonJugar", function(obj){\\n  Flashing.goToScene("Juego");\\n});';}
+function openCode(){if(!doc.code)doc.code=defaultGameCode();$('#gameCode').value=doc.code;$('#codeModal').classList.add('show')}
+function closeCode(){doc.code=$('#gameCode').value;$('#codeModal').classList.remove('show')}
+function createRuntimeCanvas(){
+ const host=$('#gameHost');host.innerHTML='';
+ const c=document.createElement('canvas');c.width=doc.width;c.height=doc.height;c.style.aspectRatio=doc.width+'/'+doc.height;host.appendChild(c);
+ const x=c.getContext('2d');
+ const clone=JSON.parse(JSON.stringify(doc));let frame=1,playing=true,started=false,last=performance.now(),acc=0;
+ const keys={},mouse={x:0,y:0,down:false},clickHandlers={},keyDownHandlers={},keyUpHandlers={},physics={},extra=[],scenes={};
+ const vars={};
+ const camera={x:0,y:0,zoom:1};
+ const api={
+  onStart:null,onFrame:null,onKeyDown:null,onKeyUp:null,onUpdate:null,
+  keyDown:k=>!!keys[k],keyUp:k=>!keys[k],get mouseX(){return mouse.x},get mouseY(){return mouse.y},
+  get frame(){return frame},get fps(){return clone.fps},vars, camera,
+  gravity:900, play:()=>playing=true, stop:()=>playing=false,
+  getObject:id=>{for(const l of clone.layers){for(const o of (l.frames[frame]||[]))if(o.id===id||o.name===id)return o}return extra.find(o=>o.id===id||o.name===id)||null},
+  findObject:name=>{for(const l of clone.layers){for(const fr of Object.values(l.frames||{}))for(const o of fr)if(o.name===name)return o}return extra.find(o=>o.name===name)||null},
+  createRect:(px,py,w,h,opts={})=>{const o={id:'game_'+uid(),name:opts.name||'Rect_'+uid(),type:'rect',x:px,y:py,w,h,fill:opts.fill||'#4da3ff',stroke:opts.stroke||'#20242b',sw:2,opacity:1};extra.push(o);return o.id},
+  createButton:(px,py,w,h,text='Botón',opts={})=>{const o={id:'game_'+uid(),name:opts.name||'Boton_'+uid(),type:'button',x:px,y:py,w,h,text,fill:opts.fill||'#4da3ff',stroke:opts.stroke||'#20242b',sw:2,textColor:opts.textColor||'#fff',fontSize:opts.fontSize||16,opacity:1};extra.push(o);return o.id},
+  setPosition:(id,px,py)=>{const o=api.getObject(id);if(o){o.x=px;o.y=py}},
+  move:(id,dx,dy)=>{const o=api.getObject(id);if(o){o.x+=dx;o.y+=dy}},
+  scale:(id,sx,sy=sx)=>{const o=api.getObject(id);if(o){o.w*=sx;o.h*=sy;if(o.r)o.r*=sx}},
+  setRotation:(id,degrees)=>{const o=api.getObject(id);if(o)o.rotation=degrees},
+  setVisible:(id,v)=>{const o=api.getObject(id);if(o)o.visible=!!v},
+  velocity:id=>{if(!physics[id])physics[id]={vx:0,vy:0,gravity:false};return {get x(){return physics[id].vx},get y(){return physics[id].vy},set x(v){physics[id].vx=+v||0},set y(v){physics[id].vy=+v||0}}},
+  enablePhysics:(id,opts={})=>{physics[id]=physics[id]||{vx:0,vy:0,gravity:false};physics[id].gravity=opts.gravity!==false;physics[id].bounce=opts.bounce||0;physics[id].static=!!opts.static},
+  collides:(a,b)=>{const A=typeof a==='string'?api.getObject(a):a,B=typeof b==='string'?api.getObject(b):b;if(!A||!B)return false;const ba=objectBounds(A),bb=objectBounds(B);return ba.x<bb.x+bb.w&&ba.x+ba.w>bb.x&&ba.y<bb.y+bb.h&&ba.y+ba.h>bb.y},
+  onClick:(id,fn)=>{clickHandlers[id]=fn},
+  playSound:name=>{const a=clone.assets.find(a=>a.id===name||a.name===name);if(a?.type==='sound'){const au=new Audio(a.data);au.play().catch(()=>{})}},
+  createScene:name=>{scenes[name]={frame:1};return name},
+  goToScene:name=>{if(scenes[name])frame=scenes[name].frame||1;else{scenes[name]={frame};}},
+  currentScene:'Main'
+ };
+ const Flashing=api;
+ function objectBounds(o){if(o.type==='circle')return{x:o.x-o.r,y:o.y-o.r,w:o.r*2,h:o.r*2};return{x:o.x,y:o.y,w:o.w||1,h:o.h||1}}
+ function allObjects(){let all=[];for(const l of clone.layers){const fr=l.frames[frame];if(fr)all.push(...fr)}return all.concat(extra)}
+ function drawR(){
+  x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);x.fillStyle=clone.background;x.fillRect(0,0,c.width,c.height);
+  x.save();x.translate(-camera.x*camera.zoom,-camera.y*camera.zoom);x.scale(camera.zoom,camera.zoom);
+  for(const o of allObjects()){if(o.visible===false)continue;x.save();x.globalAlpha=o.opacity??1;const b=objectBounds(o);x.translate(o.x+(o.type==='circle'?0:o.w/2),o.y+(o.type==='circle'?0:o.h/2));if(o.rotation)x.rotate((o.rotation||0)*Math.PI/180);x.translate(-(o.x+(o.type==='circle'?0:o.w/2)),-(o.y+(o.type==='circle'?0:o.h/2)));x.fillStyle=o.fill||'#4da3ff';x.strokeStyle=o.stroke||'#20242b';x.lineWidth=o.sw||2;
+    if(o.type==='rect'||o.type==='button'){x.fillRect(o.x,o.y,o.w,o.h);if(o.type==='button'){x.fillStyle=o.textColor||'#fff';x.font=`${o.fontSize||16}px Arial`;x.textAlign='center';x.textBaseline='middle';x.fillText(o.text||'Botón',o.x+o.w/2,o.y+o.h/2);x.textAlign='start';x.textBaseline='alphabetic'}}
+    else if(o.type==='circle'){x.beginPath();x.arc(o.x,o.y,o.r,0,Math.PI*2);x.fill();x.stroke()}
+    else if(o.type==='line'){x.beginPath();x.moveTo(o.x,o.y);x.lineTo(o.x2,o.y2);x.stroke()}
+    else if(o.type==='text'){x.fillStyle=o.fill||'#222';x.font=(o.size||28)+'px '+(o.font||'Arial');x.fillText(o.text,o.x,o.y)}
+    else if(o.type==='image'){const a=clone.assets.find(a=>a.id===o.assetId);if(a){if(!o.__img){o.__img=new Image;o.__img.src=a.data}if(o.__img.complete)x.drawImage(o.__img,o.x,o.y,o.w,o.h)}}
+    else if(o.type==='sound'){x.strokeStyle='#7f8794';x.setLineDash([3,3]);x.strokeRect(o.x-12,o.y-12,24,24);x.setLineDash([]);x.fillStyle='#7f8794';x.font='16px Arial';x.fillText('♪',o.x-5,o.y+6)}
+    else if(o.type==='brush'){x.beginPath();o.points.forEach((p,j)=>j?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke()}x.restore()}
+  x.restore();
+ }
+ function runPhysics(dt){for(const [id,p] of Object.entries(physics)){if(p.static)continue;const o=api.getObject(id);if(!o)continue;if(p.gravity){p.vy+=api.gravity*dt;o.y+=p.vy*dt}o.x+=p.vx*dt}}
+ function pointerObject(px,py){return allObjects().slice().reverse().find(o=>{const b=objectBounds(o);return px>=b.x&&px<=b.x+b.w&&py>=b.y&&py<=b.y+b.h})}
+ window.addEventListener('keydown',e=>{if(!keys[e.key]){keys[e.key]=true;try{if(typeof api.onKeyDown==='function')api.onKeyDown(e.key);if(keyDownHandlers[e.key])keyDownHandlers[e.key](e.key)}catch(err){toast('Error en teclado: '+err.message)}}});
+ window.addEventListener('keyup',e=>{keys[e.key]=false;try{if(typeof api.onKeyUp==='function')api.onKeyUp(e.key);if(keyUpHandlers[e.key])keyUpHandlers[e.key](e.key)}catch(err){toast('Error en teclado: '+err.message)}});
+ c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect();mouse.x=(e.clientX-r.left)*(c.width/r.width)/camera.zoom+camera.x;mouse.y=(e.clientY-r.top)*(c.height/r.height)/camera.zoom+camera.y});
+ c.addEventListener('mousedown',e=>{mouse.down=true;const o=pointerObject(mouse.x,mouse.y);if(o){const fn=clickHandlers[o.id]||clickHandlers[o.name];if(fn)try{fn(o)}catch(err){toast('Error en onClick: '+err.message)}if(o.assetId){const a=clone.assets.find(a=>a.id===o.assetId);if(a?.type==='sound')new Audio(a.data).play().catch(()=>{})}}});
+ c.addEventListener('mouseup',()=>mouse.down=false);
+ try{const fn=new Function('Flashing','window','document',doc.code||'');fn(Flashing,window,document);if(typeof Flashing.onStart==='function'){Flashing.onStart();started=true}}catch(err){toast('Error en código: '+err.message)}
+ drawR();
+ function loop(t){if(!document.body.contains(c))return;const dt=Math.min(.05,(t-last)/1000);last=t;if(playing){acc+=dt;runPhysics(dt);try{if(typeof Flashing.onFrame==='function')Flashing.onFrame(dt)}catch(err){playing=false;toast('Error en onFrame: '+err.message)}if(acc>=1/(clone.fps||24)){acc=0;frame=frame>=clone.totalFrames?1:frame+1}}drawR();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+}
+const DEFAULT_CFG={language:'es',uiScale:1,theme:'system',accent:'#ffb52e',autosave:false,libraryW:320,inspectorW:320,timelineH:330,gap:6,zoom:.75,density:'comfortable',gridSnap:false,showGrid:true,framesBlock:80,frameW:30,frameH:32,onion:22,onionEnabled:false,emptyFrames:true,stageW:960,stageH:540,fps:24,stageBg:'#ffffff',gridSize:20,maxFps:60,volumeDefault:10,volumeMax:20,volumeMin:0,waveH:120,soundPreview:'off',stopSoundFrame:true,totalFrames:48,playbackMax:60,loop:'loop',frameAdvance:'new',font:'Arial',fontSize:28,textColor:'#20242b',fontLimit:100,brush:4,line:3,minObject:8,opacity:1,selectOnCreate:true,decimals:3,history:30,confirmDelete:false,keepSelection:true,wheelZoom:true};
+const CFG={...DEFAULT_CFG};
+const SETTINGS_KEY='flashing.settings.v1';
+function loadSettings(){try{const raw=storage.getItem(SETTINGS_KEY);if(raw){const saved=JSON.parse(raw);Object.assign(CFG,saved)}}catch{}}
+function persistSettings(){try{storage.setItem(SETTINGS_KEY,JSON.stringify(CFG))}catch{}}
+loadSettings();
+const I18N={
+ es:{'nav.new':'Nuevo','nav.open':'Abrir','nav.exportGame':'Exportar juego y publicar','nav.importMenu':'Importar ▾','nav.importAssets':'🖼 Imágenes y sonidos','nav.importProject':'📁 Proyecto de Flashing','nav.fonts':'Fuentes','nav.code':'Código','nav.test':'▶ Probar película','nav.panels':'Paneles','nav.settings':'⚙ Configuración','nav.undo':'Deshacer','nav.redo':'Rehacer',
+ 'tool.select':'Selec.','tool.rect':'Rect.','tool.circle':'Círculo','tool.line':'Línea','tool.brush':'Lápiz','tool.text':'Texto','tool.image':'Imagen','tool.sound':'Sonido','tool.hand':'Mano',
+ 'workbar.stage':'Escenario','workbar.zoom':'Zoom','workbar.center':'⊙ Centrar vista','workbar.play':'▶ Reproducir','workbar.stop':'■ Detener','workbar.view':'Vista X: {x} · Y: {y}',
+ 'panel.properties':'Propiedades','panel.library':'Biblioteca','inspector.empty':'Selecciona un objeto del escenario para editar sus propiedades.',
+ 'lib.addImage':'＋ Imagen','lib.addSound':'＋ Sonido','lib.import':'＋ Importar','lib.hint':'Arrastra archivos desde tu laptop aquí, o usa <b>Importar</b>. Flashing acepta imágenes, sonidos y proyectos.','lib.empty':'La Biblioteca está vacía. Importa imágenes o sonidos y luego arrástralos al escenario.',
+ 'tl.layers':'CAPAS','tl.addLayer':'＋ Capa','tl.delLayer':'− Capa','tl.frames':'FOTOGRAMAS','tl.addFrame':'＋ Fotograma','tl.addFrameEnd':'＋ Al final','tl.addKey':'◆ Clave','tl.deleteFrame':'− Eliminar','tl.clear':'× Limpiar','tl.onion':'◉ Cebolla','tl.onionOn':'◉ Cebolla: ON','tl.playSound':'♫ Sonido','tl.panel':'PANEL','tl.move':'↕ Mover','tl.moving':'✓ Moviendo','tl.current':'ACTUAL','tl.header':'Capas / fotogramas',
+ 'modal.new.title':'Nuevo archivo','modal.new.create':'Crear archivo','field.projectName':'Nombre del proyecto','field.fps':'FPS','field.width':'Ancho','field.height':'Alto','field.frames':'Fotogramas iniciales','field.x':'X','field.y':'Y',
+ 'modal.panels.title':'Personalizar paneles','modal.panels.hint':'Cambia la posición y el tamaño de la caja de la línea de tiempo. Los cambios se guardan en este navegador.','modal.panels.timeline':'Línea de tiempo','modal.panels.sidebars':'Ancho de paneles laterales',
+ 'modal.code.title':'Código de acciones','modal.code.sub':'JavaScript de juego de Flashing · se guarda dentro del proyecto','modal.code.save':'Guardar código','modal.code.apiTitle':'API del motor',
+ 'modal.game.title':'Prueba de juego',
+ 'modal.publish.title':'Exportar juego y publicar','modal.publish.hint':'Exporta todo el proyecto a un archivo <b>.flasng</b> con escenas, animaciones, objetos, figuras, imágenes, sonidos, textos, fuentes y código convertido al lenguaje interno FLASNG.','modal.publish.copy':'Copiar archivo','modal.publish.download':'Exportar .flasng','modal.publish.ready':'Archivo FLASNG preparado','modal.publish.copied':'Archivo copiado',
+ 'settings.title':'Configuración','settings.subtitle':'Personaliza Flashing a tu gusto. Los cambios se guardan en este navegador.','settings.nav.general':'General','settings.nav.project':'Proyecto','settings.nav.edit':'Edición','settings.nav.sound':'Sonido','settings.general.title':'General','settings.language':'Idioma','settings.theme':'Tema','settings.theme.system':'Predeterminado del dispositivo','settings.theme.dark':'Oscuro','settings.theme.light':'Claro','settings.autosave':'Autoguardar el proyecto en este navegador','settings.project.title':'Proyecto','settings.project.hint':'Valores predeterminados usados al crear un archivo nuevo.','settings.stageBg':'Color de fondo del escenario','settings.edit.title':'Edición','settings.gridSnap':'Ajustar a la cuadrícula','settings.gridSize':'Tamaño de cuadrícula','settings.decimals':'Decimales','settings.confirmDelete':'Confirmar antes de eliminar objetos','settings.history':'Pasos de deshacer (historial)','settings.sound.title':'Sonido','settings.volumeDefault':'Volumen predeterminado','settings.volumeMax':'Volumen máximo','settings.soundPreview':'Previsualizar sonido al seleccionarlo en la Biblioteca','settings.reset':'Restaurar predeterminados','settings.apply':'Aplicar','settings.saved':'Configuración guardada','settings.wasReset':'Configuración restaurada',
+ 'common.cancel':'Cancelar','common.close':'Cerrar','common.apply':'Aplicar','common.reset':'Restaurar','help.text':'Flashing: editor multimedia y motor de videojuegos web. Usa Código para crear la lógica del juego.'},
+ en:{'nav.new':'New','nav.open':'Open','nav.exportGame':'Export game & publish','nav.importMenu':'Import ▾','nav.importAssets':'🖼 Images & sounds','nav.importProject':'📁 Flashing project','nav.fonts':'Fonts','nav.code':'Code','nav.test':'▶ Test movie','nav.panels':'Panels','nav.settings':'⚙ Settings','nav.undo':'Undo','nav.redo':'Redo',
+ 'tool.select':'Select','tool.rect':'Rect.','tool.circle':'Circle','tool.line':'Line','tool.brush':'Brush','tool.text':'Text','tool.image':'Image','tool.sound':'Sound','tool.hand':'Hand',
+ 'workbar.stage':'Stage','workbar.zoom':'Zoom','workbar.center':'⊙ Center view','workbar.play':'▶ Play','workbar.stop':'■ Stop','workbar.view':'View X: {x} · Y: {y}',
+ 'panel.properties':'Properties','panel.library':'Library','inspector.empty':'Select an object on the stage to edit its properties.',
+ 'lib.addImage':'＋ Image','lib.addSound':'＋ Sound','lib.import':'＋ Import','lib.hint':'Drag files from your laptop here, or use <b>Import</b>. Flashing accepts images, sounds and projects.','lib.empty':'The Library is empty. Import images or sounds and drag them onto the stage.',
+ 'tl.layers':'LAYERS','tl.addLayer':'＋ Layer','tl.delLayer':'− Layer','tl.frames':'FRAMES','tl.addFrame':'＋ Frame','tl.addFrameEnd':'＋ At end','tl.addKey':'◆ Keyframe','tl.deleteFrame':'− Delete','tl.clear':'× Clear','tl.onion':'◉ Onion skin','tl.onionOn':'◉ Onion skin: ON','tl.playSound':'♫ Sound','tl.panel':'PANEL','tl.move':'↕ Move','tl.moving':'✓ Moving','tl.current':'CURRENT','tl.header':'Layers / frames',
+ 'modal.new.title':'New file','modal.new.create':'Create file','field.projectName':'Project name','field.fps':'FPS','field.width':'Width','field.height':'Height','field.frames':'Initial frames','field.x':'X','field.y':'Y',
+ 'modal.panels.title':'Customize panels','modal.panels.hint':'Change the position and size of the timeline box. Changes are saved in this browser.','modal.panels.timeline':'Timeline','modal.panels.sidebars':'Sidebar widths',
+ 'modal.code.title':'Action code','modal.code.sub':'Flashing game JavaScript · saved inside the project','modal.code.save':'Save code','modal.code.apiTitle':'Engine API',
+ 'modal.game.title':'Game preview',
+ 'modal.publish.title':'Export game & publish','modal.publish.hint':'Export the whole project to a <b>.flasng</b> file with scenes, animations, objects, shapes, images, sounds, text, fonts and code converted to the internal FLASNG language.','modal.publish.copy':'Copy file','modal.publish.download':'Export .flasng','modal.publish.ready':'FLASNG file ready','modal.publish.copied':'File copied',
+ 'settings.title':'Settings','settings.subtitle':'Customize Flashing to your liking. Changes are saved in this browser.','settings.nav.general':'General','settings.nav.project':'Project','settings.nav.edit':'Editing','settings.nav.sound':'Sound','settings.general.title':'General','settings.language':'Language','settings.theme':'Theme','settings.theme.system':'Device default','settings.theme.dark':'Dark','settings.theme.light':'Light','settings.autosave':'Autosave the project in this browser','settings.project.title':'Project','settings.project.hint':'Default values used when creating a new file.','settings.stageBg':'Stage background color','settings.edit.title':'Editing','settings.gridSnap':'Snap to grid','settings.gridSize':'Grid size','settings.decimals':'Decimals','settings.confirmDelete':'Confirm before deleting objects','settings.history':'Undo steps (history)','settings.sound.title':'Sound','settings.volumeDefault':'Default volume','settings.volumeMax':'Maximum volume','settings.soundPreview':'Preview sound when selected in the Library','settings.reset':'Restore defaults','settings.apply':'Apply','settings.saved':'Settings saved','settings.wasReset':'Settings restored',
+ 'common.cancel':'Cancel','common.close':'Close','common.apply':'Apply','common.reset':'Reset','help.text':'Flashing: web media editor and game engine. Use Code to build your game logic.'}
+};
+function t(key){const lang=CFG.language==='en'?'en':'es';return (I18N[lang]&&I18N[lang][key])??key}
+function applyLanguage(){
+ const lang=CFG.language==='en'?'en':'es';document.documentElement.lang=lang;const dict=I18N[lang];
+ document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(dict[k]!=null)el.textContent=dict[k]});
+ document.querySelectorAll('[data-i18n-title]').forEach(el=>{const k=el.getAttribute('data-i18n-title');if(dict[k]!=null)el.title=dict[k]});
+ document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(dict[k]!=null)el.placeholder=dict[k]});
+ document.querySelectorAll('[data-i18n-html]').forEach(el=>{const k=el.getAttribute('data-i18n-html');if(dict[k]!=null)el.innerHTML=dict[k]});
+ renderOnionButton();renderLibrary();renderInspector();renderTimeline();
+}
+function resolveTheme(){
+  if(CFG.theme==='light')return 'light';
+  if(CFG.theme==='dark')return 'dark';
+  const light=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches;
+  return light?'light':'dark';
+}
+function applyTheme(){
+  const th=resolveTheme();
+  document.documentElement.style.colorScheme=th;
+  document.body.dataset.theme=th;
+  document.body.dataset.density='comfortable';
+  document.documentElement.dir='ltr';
+}
+let systemThemeMq=null;
+function watchSystemTheme(){
+  systemThemeMq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)');
+  if(systemThemeMq) systemThemeMq.addEventListener?.('change',()=>{if(CFG.theme==='system')applyTheme()});
+}
+async function importFonts(files){for(const f of Array.from(files||[])){if((doc.customFonts||[]).length>=(CFG?.fontLimit||100)){toast('Límite de fuentes personalizadas alcanzado');break}if(!/\.(otf|tf)$/i.test(f.name)){toast('Fuente ignorada: usa .otf o .tf');continue}const family=f.name.replace(/\.(otf|tf)$/i,'');try{const buf=await f.arrayBuffer();const face=new FontFace(family,buf);await face.load();document.fonts.add(face);const r=new FileReader();r.onload=()=>{doc.customFonts=doc.customFonts||[];doc.customFonts=doc.customFonts.filter(x=>x.family!==family);doc.customFonts.push({family,data:r.result});renderInspector();toast('Fuente importada: '+family)};r.readAsDataURL(f)}catch(e){toast('No se pudo cargar la fuente: '+f.name)}}}
+$('#fontBtn').onclick=()=>$('#fontInput').click();$('#fontInput').onchange=e=>{importFonts(e.target.files);e.target.value=''};
+$('#codeBtn').onclick=openCode;$('#closeCodeBtn').onclick=closeCode;document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){if($('#codeModal').classList.contains('show')){doc.code=$('#gameCode').value;$('#codeModal').classList.remove('show');$('#testBtn').click()}}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!e.shiftKey){e.preventDefault();if(history.length){future.push(snapshot());restore(history.pop());toast(t('nav.undo'))}}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();if(future.length){history.push(snapshot());restore(future.pop());toast(t('nav.redo'))}}});$('#saveCodeBtn').onclick=()=>{pushHistory();doc.code=$('#gameCode').value;toast('Código guardado en el proyecto')};$('#codeHelpBtn').onclick=()=>$('#apiHelp').scrollIntoView({behavior:'smooth'});$('#testBtn').onclick=()=>{doc.code=$('#gameCode').value;$('#codeModal').classList.remove('show');$('#gameModal').classList.add('show');createRuntimeCanvas()};$('#closeGameBtn').onclick=()=>$('#gameModal').classList.remove('show');
+$('#exportGameBtn').onclick=()=>{const code=buildFlasng();$('#exportCode').value=code;$('#publishModal').classList.add('show');toast(t('modal.publish.ready'))};$('#closeModal').onclick=()=>$('#publishModal').classList.remove('show');$('#copyCode').onclick=()=>navigator.clipboard?.writeText($('#exportCode').value).then(()=>toast(t('modal.publish.copied')));$('#downloadGame').onclick=()=>download($('#exportCode').value,(doc.name||'juego').replace(/[^a-z0-9_-]+/gi,'_')+'.flasng','application/octet-stream');
+function exportGame(){const safe=JSON.stringify(doc).replace(/<\/script/gi,'<\\/script');const codeSafe=JSON.stringify(doc.code||'').replace(/<\/script/gi,'<\\/script');return `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(doc.name)}</title><style>html,body{margin:0;background:#111318;display:grid;place-items:center;height:100vh;overflow:hidden}canvas{background:white;max-width:96vw;max-height:94vh;box-shadow:0 12px 45px #000}
+/* v13: dark theme isolation — light-theme rules must never leak into dark mode */
+body[data-theme="dark"] .settingsCard{background:#22252b!important;color:#e9ecf1!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .settingsHead{background:#252a31!important;color:#e9ecf1!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .settingsHead h2{color:#e9ecf1!important}
+body[data-theme="dark"] .settingsHead p{color:#aeb5c0!important}
+body[data-theme="dark"] .settingsNav{background:#1b1e23!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .settingsNav button{background:transparent!important;color:#e9ecf1!important;border-color:transparent!important}
+body[data-theme="dark"] .settingsNav button:hover{background:#292d34!important;color:#fff!important}
+body[data-theme="dark"] .settingsNav button.active{background:#30353d!important;color:#fff!important;border-color:#ffb52e!important}
+body[data-theme="dark"] .settingsContent{background:#22252b!important;color:#e9ecf1!important}
+body[data-theme="dark"] .settingsSection{color:#e9ecf1!important}
+body[data-theme="dark"] .settingsSection h3{color:#e9ecf1!important}
+body[data-theme="dark"] .settingsSection>p{color:#aeb5c0!important}
+body[data-theme="dark"] .settingsField{background:#1a1d22!important;border-color:#353a43!important;color:#e9ecf1!important}
+body[data-theme="dark"] .settingsField label,body[data-theme="dark"] .settingsField .checkLabel,body[data-theme="dark"] .settingsHint{color:#aeb5c0!important}
+body[data-theme="dark"] .settingsField input,body[data-theme="dark"] .settingsField select,body[data-theme="dark"] .settingsField textarea{background:#101318!important;color:#e9ecf1!important;border-color:#3c424c!important}
+body[data-theme="dark"] .settingsActions{background:#1c1f24!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .settingsActions button{background:#2a2e35!important;color:#e9ecf1!important;border-color:#3c414b!important}
+body[data-theme="dark"] .settingsActions button:hover{background:#353a43!important}
+body[data-theme="dark"] .settingsActions .settingsDanger{color:#ff8b8b!important;border-color:#7a3c3c!important}
+body[data-theme="dark"] .settingsCard input[type="checkbox"]{accent-color:#ffb52e}
+body[data-theme="dark"] .soundWave{background:#171a1f!important;border-color:#3a3f48!important}
+body[data-theme="dark"] .codebox{background:#101318!important;color:#e9ecf1!important;border-color:#3c424c!important}
+</style><canvas id="c" width="${doc.width}" height="${doc.height}"></canvas><script>const D=${safe},USER_CODE=${codeSafe},C=document.getElementById('c'),X=C.getContext('2d');let f=1,playing=true;const keys={};const mouse={x:0,y:0};const extra=[];window.addEventListener('keydown',e=>keys[e.key]=true);window.addEventListener('keyup',e=>keys[e.key]=false);C.addEventListener('mousemove',e=>{const r=C.getBoundingClientRect();mouse.x=(e.clientX-r.left)*(C.width/r.width);mouse.y=(e.clientY-r.top)*(C.height/r.height)});const imgs={};for(const a of D.assets||[])if(a.type==='image'){let i=new Image;i.src=a.data;imgs[a.id]=i}const objs=[];for(const l of D.layers||[])for(const fr of Object.values(l.frames||{}))for(const o of fr)objs.push(o);const Flashing={onStart:null,onFrame:null,keyDown:k=>!!keys[k],get mouseX(){return mouse.x},get mouseY(){return mouse.y},play:()=>playing=true,stop:()=>playing=false,getObject:id=>objs.find(o=>o.id===id)||extra.find(o=>o.id===id),createRect:(x,y,w,h)=>{const o={id:'game_'+Math.random().toString(36).slice(2,9),type:'rect',x,y,w,h,fill:'#4da3ff',stroke:'#20242b',sw:CFG?.line||2,opacity:CFG?.opacity??1};extra.push(o);return o.id},setPosition:(id,x,y)=>{const o=Flashing.getObject(id);if(o){o.x=x;o.y=y}},move:(id,dx,dy)=>{const o=Flashing.getObject(id);if(o){o.x+=dx;o.y+=dy}}};function draw(){X.clearRect(0,0,C.width,C.height);X.fillStyle=D.background;X.fillRect(0,0,C.width,C.height);for(const l of D.layers){const fr=l.frames[f];if(!fr)continue;for(const o of fr)drawObj(o)}for(const o of extra)drawObj(o);X.globalAlpha=1}function drawObj(o){X.globalAlpha=o.opacity??1;X.fillStyle=o.fill||'#4da3ff';X.strokeStyle=o.stroke||'#20242b';X.lineWidth=o.sw||2;if(o.type==='rect')X.fillRect(o.x,o.y,o.w,o.h);else if(o.type==='image'&&imgs[o.assetId])X.drawImage(imgs[o.assetId],o.x,o.y,o.w,o.h);else if(o.type==='circle'){X.beginPath();X.arc(o.x,o.y,o.r,0,Math.PI*2);X.fill();X.stroke()}else if(o.type==='line'){X.beginPath();X.moveTo(o.x,o.y);X.lineTo(o.x2,o.y2);X.stroke()}else if(o.type==='text'){X.fillStyle=o.fill||'#222';X.font=(o.size||28)+'px '+(o.font||'Arial');X.fillText(o.text,o.x,o.y)}else if(o.type==='brush'){X.beginPath();o.points.forEach((p,j)=>j?X.lineTo(p.x,p.y):X.moveTo(p.x,p.y));X.stroke()}}try{new Function('Flashing',USER_CODE)(Flashing);if(typeof Flashing.onStart==='function')Flashing.onStart()}catch(e){console.error(e)}let last=performance.now(),acc=0;function loop(t){const dt=t-last;last=t;if(playing){acc+=dt;if(acc>=1000/(D.fps||24)){acc=0;f=f>=D.totalFrames?1:f+1;try{if(typeof Flashing.onFrame==='function')Flashing.onFrame()}catch(e){playing=false;console.error(e)}draw()}}requestAnimationFrame(loop)}draw();requestAnimationFrame(loop);<\/script></html>`}
+
+init(); applyPanelLayout(getPanelLayout()); centerView(); loadCustomFonts(); applyTheme(); watchSystemTheme(); applyLanguage(); ensureAutosave();
+</script>
+</body></html>
