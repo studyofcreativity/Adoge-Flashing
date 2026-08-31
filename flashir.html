@@ -1,0 +1,1628 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Flashir 2 — lenguaje creativo ampliado</title>
+<style>
+:root{--bg:#17191d;--panel:#22252b;--panel2:#292d34;--line:#3a3f48;--text:#e9ecf1;--muted:#aeb5c0;--accent:#ffb52e;--blue:#4da3ff;--danger:#ff6262;--green:#4ade80}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+button,select{font:inherit;border:1px solid #3c414b;background:#2a2e35;color:var(--text);border-radius:6px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+button:hover{background:#353a43}
+.docLink{border:1px solid #3c414b;background:#2a2e35;color:var(--text);border-radius:6px;padding:8px 12px;text-decoration:none;font-size:inherit}.docLink:hover{background:#353a43}
+button.primary{background:var(--accent);color:#1c1300;border-color:var(--accent);font-weight:700}
+button.primary:hover{filter:brightness(1.08)}
+button.stop{border-color:#7a3c3c}
+button:disabled{opacity:.45;cursor:not-allowed}
+#app{display:grid;grid-template-rows:60px 1fr;height:100vh}
+#top{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);background:#121418}
+.brand{font-size:19px;font-weight:800;margin-right:8px}
+.brand span{color:var(--accent)}
+.brand small{display:block;font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.6px;margin-top:-2px}
+.sep{width:1px;height:26px;background:var(--line);margin:0 4px}
+.spacer{flex:1}
+#main{display:grid;grid-template-columns:1fr 1fr;min-height:0}
+#editorPane{display:flex;flex-direction:column;border-right:1px solid var(--line);min-width:0}
+#editorHead{padding:8px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);background:#1c1f24}
+#code{flex:1;border:0;outline:0;resize:none;background:#101216;color:#e6e9ee;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.55;padding:14px;tab-size:2}
+#rightPane{display:flex;flex-direction:column;min-width:0}
+#canvasWrap{flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#22252b 0,#171a1f 60%,#101216 100%);overflow:auto;padding:14px}
+canvas{background:#fff;box-shadow:0 8px 30px #000a;max-width:100%;max-height:100%}
+#consoleWrap{height:150px;border-top:1px solid var(--line);background:#101216;display:flex;flex-direction:column;min-height:0}
+#consoleHead{padding:6px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+#consoleLog{flex:1;overflow-y:auto;padding:8px 12px;font-family:ui-monospace,monospace;font-size:12px;line-height:1.5}
+.logline{white-space:pre-wrap;word-break:break-word}
+.logline.err{color:var(--danger)}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:30}
+.modal.show{display:flex}
+.helpCard{width:min(860px,94vw);max-height:88vh;overflow:auto;background:#22262d;border:1px solid #414750;border-radius:10px;box-shadow:0 20px 80px #000;padding:0}
+.helpHead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#22262d;z-index:2}
+.helpHead h2{margin:0;font-size:17px}
+.helpBody{padding:16px 18px}
+.helpBody h3{font-size:13px;color:var(--accent);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #2d323a;padding-top:14px}
+.helpBody h3:first-child{margin-top:0;border-top:0;padding-top:0}
+.helpBody h4{font-size:11.5px;color:var(--blue);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.4px}
+code.blk{display:block;background:#101318;border:1px solid #3b4048;border-radius:6px;padding:9px 10px;font-family:ui-monospace,monospace;font-size:12px;margin:4px 0 10px;color:#dbe0e7;white-space:pre-wrap}
+.helpBody p{font-size:12.5px;color:var(--muted);line-height:1.6;margin:4px 0}
+.helpBody table{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0 14px}
+.helpBody td{padding:4px 6px;border-bottom:1px solid #2d323a;vertical-align:top}
+.helpBody td:first-child{color:var(--blue);font-family:ui-monospace,monospace;white-space:nowrap}
+.swatches{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
+.sw{display:flex;align-items:center;gap:5px;font-size:11px;background:#1a1d22;border:1px solid #2d323a;border-radius:5px;padding:3px 7px 3px 4px;color:var(--muted)}
+.sw i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #0006}
+</style>
+
+<style>
+#stage:fullscreen,
+#stage:-webkit-full-screen{
+  width:100vw !important;
+  height:100vh !important;
+  max-width:none !important;
+  max-height:none !important;
+  background:#000 !important;
+  object-fit:contain;
+  box-shadow:none !important;
+}
+#fullscreenBtn{min-width:145px}
+/* FLASNG2 */
+#exportGameBtn{min-width:210px}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <div class="brand">Flash<span>ir</span><small>lenguaje creativo ampliado · v2</small></div>
+    <select id="examples">
+      <option value="">— Ejemplos —</option>
+      <option value="basico">Básico: formas</option>
+      <option value="aleatorio">Círculos aleatorios</option>
+      <option value="rebote">Pelota rebotando (animado)</option>
+      <option value="mouse">Sigue al mouse (animado)</option>
+      <option value="cara">Cara con trazos</option>
+      <option value="funciones">Funciones propias</option>
+      <option value="listas">Listas + para_cada</option>
+      <option value="teclado">Juego: mover con el teclado</option>
+      <option value="degradado">Degradados y sombras</option>
+      <option value="poligonos">Polígonos rotando</option>
+      <option value="objetos">Objetos + ternario</option>
+      <option value="formas">Primitivas ampliadas</option>
+      <option value="tetris">Mini Tetris</option>
+      <option value="simulador">Simulador de partículas</option>
+      <option value="aventura">Aventura point-and-click</option>
+      <option value="fisica">Simulador de gravedad</option>
+    </select>
+    <div class="sep"></div>
+    <button id="runBtn" class="primary">▶ Ejecutar</button>
+    <button id="stopBtn" class="stop" disabled>■ Detener</button>
+    <button id="downloadBtn">⭳ Descargar PNG</button><button id="exportGameBtn" class="primary">📦 Exportar juego y publicar</button>
+    <button id="fullscreenBtn" title="Pantalla completa">⛶ Pantalla completa</button>
+    <div class="spacer"></div>
+    <button id="helpBtn">? Lenguaje</button><a class="docLink" href="DocFlashir.html" target="_blank">📘 Documentación</a>
+  </div>
+  <div id="main">
+    <div id="editorPane">
+      <div id="editorHead">código.flashir — Ctrl+Enter para ejecutar</div>
+      <textarea id="code" spellcheck="false"></textarea>
+    </div>
+    <div id="rightPane">
+      <div id="canvasWrap"><canvas id="stage" width="600" height="400"></canvas></div>
+      <div id="consoleWrap">
+        <div id="consoleHead">Consola</div>
+        <div id="consoleLog"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="helpModal">
+  <div class="helpCard">
+    <div class="helpHead"><h2>El lenguaje Flashir</h2><button id="helpClose">Cerrar ✕</button></div>
+    <div class="helpBody">
+      <h3>Estructura básica</h3>
+      <p>Cada instrucción termina en <code>;</code> (opcional al final de línea). Los comentarios empiezan con <code>#</code> o <code>//</code>.</p>
+      <code class="blk">fondo("#101014");
+circulo(300, 200, 80, "azul");
+texto(40, 40, "¡Hola!", 28, "blanco");</code>
+
+      <h3>Variables</h3>
+      <code class="blk">var x = 10;
+x = x + 5;
+x += 1;</code>
+
+      <h3>Control de flujo</h3>
+      <code class="blk">si (x > 100) { circulo(x, 100, 20, "rojo"); }
+sino { circulo(x, 100, 20, "azul"); }
+
+repetir(10) { circulo(random(0, ancho), random(0, alto), 8, "rosa"); }
+
+para (var i = 0; i < 5; i++) { circulo(i * 60 + 40, 200, 20, "verde"); }
+
+mientras (x < 500) { x = x + 10; }
+
+para_cada (var item en [10, 20, 30]) { imprimir(item); }</code>
+      <p>Dentro de cualquier bucle (<code>repetir</code>, <code>para</code>, <code>mientras</code>, <code>para_cada</code>) podés usar <code>romper;</code> para salir del bucle y <code>continuar;</code> para saltar a la siguiente vuelta.</p>
+
+      <h3>Funciones propias</h3>
+      <p>Podés definir tus propias funciones con <code>funcion</code> y devolver un valor con <code>retornar</code>. Se pueden llamar a sí mismas (recursión).</p>
+      <code class="blk">funcion doble(n) {
+  retornar n * 2;
+}
+
+funcion factorial(n) {
+  si (n <= 1) { retornar 1; }
+  retornar n * factorial(n - 1);
+}
+
+imprimir(doble(21));
+imprimir(factorial(5));</code>
+
+      <h3>Listas</h3>
+      <p>Una lista se escribe entre corchetes. Se accede e indexa con <code>lista[indice]</code> (los índices negativos cuentan desde el final).</p>
+      <code class="blk">var colores = ["rojo", "verde", "azul"];
+imprimir(colores[0]);
+colores[1] = "amarillo";
+imprimir(colores[-1]);
+
+para_cada (var c en colores) { imprimir(c); }</code>
+
+      <h3>Animación</h3>
+      <p>Todo lo que pongas dentro de <code>animar { ... }</code> se repite en cada fotograma (como una película).</p>
+      <code class="blk">var x = 0;
+animar {
+  fondo("#101014");
+  x = x + 3;
+  circulo(x, 200, 20, "amarillo");
+}</code>
+
+      <h3>Teclado y mouse</h3>
+      <table>
+        <tr><td>tecla_presionada("flecha")</td><td>true mientras esa tecla está apretada (ej: "arrowleft", "arrowright", "arrowup", "arrowdown", "a", " ", "enter")</td></tr>
+        <tr><td>raton_presionado</td><td>true mientras el botón del mouse está apretado</td></tr>
+        <tr><td>raton_x / raton_y</td><td>Posición actual del mouse sobre el lienzo</td></tr>
+        <tr><td>click_x / click_y</td><td>Posición del último clic sobre el lienzo</td></tr>
+      </table>
+      <code class="blk">animar {
+  fondo("#101014");
+  si (tecla_presionada("arrowright")) { x = x + 4; }
+  rectangulo(x, 180, 40, 40, "verde");
+}</code>
+
+      <h3>Funciones para dibujar — básicas</h3>
+      <table>
+        <tr><td>fondo(color)</td><td>Rellena todo el lienzo de un color</td></tr>
+        <tr><td>limpiar()</td><td>Borra el lienzo (transparente)</td></tr>
+        <tr><td>circulo(x,y,r,color)</td><td>Círculo relleno</td></tr>
+        <tr><td>circuloContorno(x,y,r,color,grosor)</td><td>Círculo con borde, sin relleno</td></tr>
+        <tr><td>rectangulo(x,y,w,h,color)</td><td>Rectángulo relleno</td></tr>
+        <tr><td>rectanguloContorno(x,y,w,h,color,grosor)</td><td>Rectángulo solo borde</td></tr>
+        <tr><td>rectanguloRedondeado(x,y,w,h,radio,color)</td><td>Rectángulo con esquinas redondeadas</td></tr>
+        <tr><td>linea(x1,y1,x2,y2,color,grosor)</td><td>Línea recta</td></tr>
+        <tr><td>lineaPunteada(x1,y1,x2,y2,color,grosor,patron)</td><td>Línea punteada</td></tr>
+        <tr><td>triangulo(x1,y1,x2,y2,x3,y3,color)</td><td>Triángulo relleno</td></tr>
+        <tr><td>texto(x,y,"texto",tamaño,color,fuente)</td><td>Dibuja texto</td></tr>
+        <tr><td>textoCentrado(x,y,"texto",tamaño,color,fuente)</td><td>Texto centrado horizontalmente en x</td></tr>
+        <tr><td>imagen("url",x,y,w,h)</td><td>Dibuja una imagen desde una URL</td></tr>
+        <tr><td>tamanoLienzo(w,h)</td><td>Cambia el tamaño del lienzo</td></tr>
+        <tr><td>trazo_iniciar(x,y) / trazo_linea(x,y) / trazo_curva(cx,cy,x,y) / trazo_cerrar(color,"relleno"|"borde")</td><td>Dibuja una forma libre paso a paso</td></tr>
+        <tr><td>imprimir(valor)</td><td>Escribe en la consola</td></tr>
+        <tr><td>detener()</td><td>Detiene la animación desde el código</td></tr>
+      </table>
+
+      <h3>Funciones para dibujar — formas nuevas</h3>
+      <table>
+        <tr><td>elipse(x,y,radioX,radioY,color,rotacionGrados)</td><td>Elipse rellena</td></tr>
+        <tr><td>elipseContorno(x,y,radioX,radioY,color,grosor,rotacionGrados)</td><td>Elipse solo borde</td></tr>
+        <tr><td>arco(x,y,r,anguloInicio,anguloFin,color,grosor)</td><td>Arco (borde), ángulos en grados</td></tr>
+        <tr><td>arcoRelleno(x,y,r,anguloInicio,anguloFin,color)</td><td>Sector de círculo relleno ("porción de torta")</td></tr>
+        <tr><td>poligono(x,y,lados,radio,color,rotacionGrados)</td><td>Polígono regular relleno</td></tr>
+        <tr><td>poligonoContorno(x,y,lados,radio,color,grosor,rotacionGrados)</td><td>Polígono regular solo borde</td></tr>
+      </table>
+
+      <h3>Degradados, sombras y transformaciones</h3>
+      <table>
+        <tr><td>fondoDegradado(color1,color2,"vertical"|"horizontal")</td><td>Fondo con degradado lineal</td></tr>
+        <tr><td>circuloDegradado(x,y,r,colorCentro,colorBorde)</td><td>Círculo con degradado radial</td></tr>
+        <tr><td>sombra(color,desenfoque,dx,dy)</td><td>Activa sombra para lo que dibujes después</td></tr>
+        <tr><td>quitarSombra()</td><td>Desactiva la sombra</td></tr>
+        <tr><td>opacidad(valor)</td><td>Transparencia global (0 a 1) para lo que dibujes después</td></tr>
+        <tr><td>guardar() / restaurar()</td><td>Guarda / restaura el estado del lienzo (color, transformaciones, etc.)</td></tr>
+        <tr><td>trasladar(x,y)</td><td>Mueve el origen del lienzo</td></tr>
+        <tr><td>rotar(anguloGrados)</td><td>Rota el lienzo desde el origen actual</td></tr>
+        <tr><td>escalar(sx,sy)</td><td>Escala el lienzo desde el origen actual</td></tr>
+      </table>
+      <p>Tip: usá <code>guardar()</code> antes de <code>trasladar/rotar/escalar</code> y <code>restaurar()</code> después, para que la transformación no afecte al resto del dibujo.</p>
+
+      <h3>Funciones de texto</h3>
+      <table>
+        <tr><td>mayusculas(texto) / minusculas(texto)</td><td>Convierte a mayúsculas / minúsculas</td></tr>
+        <tr><td>longitudTexto(texto)</td><td>Cantidad de caracteres</td></tr>
+        <tr><td>subTexto(texto,inicio,fin)</td><td>Extrae una parte del texto</td></tr>
+        <tr><td>reemplazar(texto,buscar,nuevo)</td><td>Reemplaza todas las apariciones</td></tr>
+        <tr><td>incluye(texto,buscar)</td><td>true si el texto contiene "buscar"</td></tr>
+        <tr><td>unir(...)</td><td>Une varios valores en un solo texto</td></tr>
+        <tr><td>textoANumero(texto) / numeroATexto(numero)</td><td>Convierte entre texto y número</td></tr>
+      </table>
+      <p>El operador <code>+</code> también une textos: <code>"Hola " + "mundo"</code>.</p>
+
+      <h3>Funciones de listas</h3>
+      <table>
+        <tr><td>lista_agregar(lista,valor)</td><td>Agrega un valor al final</td></tr>
+        <tr><td>lista_quitar(lista,indice)</td><td>Quita el elemento en esa posición</td></tr>
+        <tr><td>lista_longitud(lista)</td><td>Cantidad de elementos</td></tr>
+        <tr><td>lista_contiene(lista,valor)</td><td>true si el valor está en la lista</td></tr>
+        <tr><td>lista_vacia(lista)</td><td>true si la lista no tiene elementos</td></tr>
+        <tr><td>lista_ordenar(lista)</td><td>Devuelve una copia ordenada</td></tr>
+        <tr><td>lista_invertir(lista)</td><td>Devuelve una copia invertida</td></tr>
+        <tr><td>lista_unir(lista,separador)</td><td>Convierte la lista en texto</td></tr>
+      </table>
+
+      <h3>Funciones matemáticas</h3>
+      <table>
+        <tr><td>random(a,b)</td><td>Número decimal aleatorio entre a y b</td></tr>
+        <tr><td>randomEntero(a,b)</td><td>Número entero aleatorio entre a y b</td></tr>
+        <tr><td>elegir(v1,v2,...)</td><td>Devuelve uno de los valores al azar</td></tr>
+        <tr><td>aleatorioBooleano()</td><td>true o false al azar</td></tr>
+        <tr><td>sin(x) / cos(x) / tan(x)</td><td>Trigonometría (radianes)</td></tr>
+        <tr><td>asin(x) / acos(x) / atan(x) / atan2(y,x)</td><td>Trigonometría inversa</td></tr>
+        <tr><td>gradosARadianes(g) / radianesAGrados(r)</td><td>Conversión de ángulos</td></tr>
+        <tr><td>raiz(x) / abs(x) / potencia(base,exp)</td><td>Raíz cuadrada / valor absoluto / potencia</td></tr>
+        <tr><td>log(x) / log10(x) / exp(x)</td><td>Logaritmo natural / base 10 / exponencial</td></tr>
+        <tr><td>redondear(x) / piso(x) / techo(x) / signo(x)</td><td>Redondeo y signo</td></tr>
+        <tr><td>min(...) / max(...)</td><td>Mínimo / máximo</td></tr>
+        <tr><td>limitar(valor,min,max)</td><td>Recorta un valor a un rango</td></tr>
+        <tr><td>mapear(valor,a1,a2,b1,b2)</td><td>Convierte un valor de un rango a otro</td></tr>
+        <tr><td>distancia(x1,y1,x2,y2)</td><td>Distancia entre dos puntos</td></tr>
+        <tr><td>anguloHacia(x1,y1,x2,y2)</td><td>Ángulo en grados de un punto a otro</td></tr>
+        <tr><td>hipotenusa(a,b)</td><td>Hipotenusa de un triángulo rectángulo</td></tr>
+      </table>
+
+      <h3>Variables integradas</h3>
+      <table>
+        <tr><td>ancho / alto</td><td>Tamaño actual del lienzo</td></tr>
+        <tr><td>raton_x / raton_y / raton_presionado</td><td>Posición y estado del mouse</td></tr>
+        <tr><td>click_x / click_y</td><td>Posición del último clic</td></tr>
+        <tr><td>frame</td><td>Número de fotograma actual (dentro de animar)</td></tr>
+        <tr><td>tiempo</td><td>Milisegundos desde que empezó a correr el código</td></tr>
+        <tr><td>pi / e / infinito</td><td>3.14159... / 2.71828... / infinito</td></tr>
+      </table>
+
+      <h3>Flashir ampliado</h3>
+      <p>Esta edición conserva el núcleo original y agrega <code>let</code>/<code>const</code>, <code>nulo</code>, objetos literales, propiedades con punto, ternario, introspección, utilidades de texto/listas y primitivas gráficas.</p>
+      <code class="blk">const jugador = {nombre: "Luna", puntos: 120};
+jugador.puntos += 10;
+texto(30,60,jugador.nombre,28,"cian");
+texto(30,100,jugador.puntos &gt;= 100 ? "Experto" : "Inicial",22,"amarillo");</code>
+      <table><tr><td>tipo(v)</td><td>numero, texto, booleano, lista, objeto o nulo.</td></tr><tr><td>objeto()</td><td>Crea un objeto vacío.</td></tr><tr><td>poner / obtener / eliminar</td><td>Gestionan propiedades.</td></tr><tr><td>claves / valores / tiene</td><td>Inspeccionan objetos.</td></tr><tr><td>recortar / separar / empiezaCon / terminaCon</td><td>Texto.</td></tr><tr><td>subLista / copiarLista / lista_indice / lista_reemplazar</td><td>Listas.</td></tr><tr><td>punto / cuadrado / rombo / estrella / corazon / flecha</td><td>Geometría adicional.</td></tr><tr><td>rejilla / medirTexto / fuente / alinear / grosor</td><td>Composición.</td></tr><tr><td>colorRelleno / colorBorde / rellenar / borde</td><td>Canvas avanzado.</td></tr><tr><td>resetearTransformacion / composicion</td><td>Renderizado avanzado.</td></tr></table>
+      <p>El ternario usa <code>condición ? valor_si : valor_no</code>. Los objetos usan <code>{clave: valor}</code> y <code>objeto.clave</code>.</p>
+<h3>Color y utilidades</h3>
+      <table>
+        <tr><td>colorAleatorio()</td><td>Color hex al azar</td></tr>
+        <tr><td>oscurecerColor(color, cantidad)</td><td>Oscurece un color (0 a 1, por defecto 0.2)</td></tr>
+        <tr><td>aclararColor(color, cantidad)</td><td>Aclara un color (0 a 1, por defecto 0.2)</td></tr>
+        <tr><td>colorRGBA(r,g,b,a)</td><td>Arma un color rgba()</td></tr>
+        <tr><td>reloj() / fecha()</td><td>Hora actual HH:MM:SS / fecha actual</td></tr>
+        <tr><td>vibrar(ms)</td><td>Hace vibrar el dispositivo (si lo soporta)</td></tr>
+      </table>
+
+      <h3>Arquitectura</h3><p>Flashir sigue el flujo lexer → parser → AST → intérprete → Canvas 2D. La consola distingue errores de sintaxis y ejecución. </p>
+      <h3>Colores</h3>
+      <p>Podés usar nombres en español, un código hex como <code>"#4da3ff"</code>, o cualquier color CSS como <code>"tomato"</code>.</p>
+      <div class="swatches" id="swatches"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const codeEl = document.getElementById('code');
+const consoleEl = document.getElementById('consoleLog');
+const runBtn = document.getElementById('runBtn');
+const stopBtn = document.getElementById('stopBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const examplesSel = document.getElementById('examples');
+const helpBtn = document.getElementById('helpBtn');
+const helpModal = document.getElementById('helpModal');
+const helpClose = document.getElementById('helpClose');
+
+let mouseX = 0, mouseY = 0, startTime = Date.now(), frameCount = 0, animId = null, animateAst = null;
+let scopeStack = [{}];
+let functions = {};
+let callDepth = 0;
+
+/* Estado del recolector de errores.
+   Debe existir antes de resetErrors()/addError(). */
+let collectedErrors = [];
+let errorKeys = new Set();
+let runningWithErrors = false;
+let currentPath = null;
+let mousePressed = false, lastClickX = 0, lastClickY = 0, clickPulse = false;
+let previousKeys = new Set(), frameDelta = 1/60, lastFrameTime = performance.now();
+const keysDown = new Set();
+const imgCache = {};
+
+/* ---------------- COLOR: utilidades ---------------- */
+const __colorProbe = document.createElement('canvas');
+__colorProbe.width = 1; __colorProbe.height = 1;
+const __colorProbeCtx = __colorProbe.getContext('2d');
+function colorToRGB(c){
+  __colorProbeCtx.clearRect(0, 0, 1, 1);
+  __colorProbeCtx.fillStyle = resolveColorRef(c);
+  __colorProbeCtx.fillRect(0, 0, 1, 1);
+  const d = __colorProbeCtx.getImageData(0, 0, 1, 1).data;
+  return { r: d[0], g: d[1], b: d[2] };
+}
+function rgbToHex(r, g, b){
+  const clamp = v => Math.max(0, Math.min(255, Math.round(v)));
+  return '#' + [clamp(r), clamp(g), clamp(b)].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+function resolveColorRef(c){ return resolveColor(c); }
+
+canvas.addEventListener('mousemove', e => {
+  const r = canvas.getBoundingClientRect();
+  mouseX = (e.clientX - r.left) * (canvas.width / r.width);
+  mouseY = (e.clientY - r.top) * (canvas.height / r.height);
+});
+canvas.addEventListener('mousedown', () => { mousePressed = true; });
+window.addEventListener('mouseup', () => { mousePressed = false; });
+canvas.addEventListener('click', e => {
+  const r = canvas.getBoundingClientRect();
+  lastClickX = (e.clientX - r.left) * (canvas.width / r.width);
+  lastClickY = (e.clientY - r.top) * (canvas.height / r.height);
+  clickPulse = true;
+});
+window.addEventListener('keydown', e => {
+  keysDown.add(e.key.toLowerCase());
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()) && document.activeElement !== codeEl){ e.preventDefault(); }
+});
+window.addEventListener('keyup', e => { keysDown.delete(e.key.toLowerCase()); });
+
+function log(msg, isError){
+  const div = document.createElement('div');
+  div.className = 'logline' + (isError ? ' err' : '');
+  div.textContent = msg;
+  consoleEl.appendChild(div);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+/* ---------------- LEXER ---------------- */
+function tokenize(src){
+  const tokens = [];
+  let i = 0; const n = src.length; let line = 1;
+  const isDigit = c => c >= '0' && c <= '9';
+  const isAlpha = c => /[A-Za-zÁÉÍÓÚÑÜáéíóúñü_]/.test(c);
+  const isAlnum = c => /[A-Za-z0-9ÁÉÍÓÚÑÜáéíóúñü_]/.test(c);
+  while(i < n){
+    const c = src[i];
+    if(c === '\n'){ line++; i++; continue; }
+    if(c === ' ' || c === '\t' || c === '\r'){ i++; continue; }
+    if(c === '#'){ while(i < n && src[i] !== '\n') i++; continue; }
+    if(c === '/' && src[i+1] === '/'){ while(i < n && src[i] !== '\n') i++; continue; }
+    if(isDigit(c) || (c === '.' && isDigit(src[i+1]))){
+      let j = i; while(j < n && (isDigit(src[j]) || src[j] === '.')) j++;
+      tokens.push({type:'NUM', value: parseFloat(src.slice(i,j)), line}); i = j; continue;
+    }
+    if(c === '"'){
+      let j = i + 1, s = '';
+      while(j < n && src[j] !== '"'){
+        if(src[j] === '\\' && j + 1 < n){
+          const nx = src[j+1];
+          s += (nx === 'n') ? '\n' : nx;
+          j += 2;
+        } else { s += src[j]; j++; }
+      }
+      if(j >= n) throw new Error('Cadena de texto sin cerrar (falta ") en línea ' + line);
+      tokens.push({type:'STR', value:s, line}); i = j + 1; continue;
+    }
+    if(isAlpha(c)){
+      let j = i; while(j < n && isAlnum(src[j])) j++;
+      tokens.push({type:'IDENT', value: src.slice(i,j), line}); i = j; continue;
+    }
+    const two = src.slice(i, i+2);
+    if(['==','!=','<=','>=','&&','||','++','--','+=','-=','*=','/='].includes(two)){
+      tokens.push({type:'OP', value: two, line}); i += 2; continue;
+    }
+    if('+-*/%=<>!(){}[],;:.?'.includes(c)){
+      tokens.push({type:'OP', value: c, line}); i++; continue;
+    }
+    throw new Error('Carácter inesperado "' + c + '" en línea ' + line);
+  }
+  tokens.push({type:'EOF', value:null, line});
+  return tokens;
+}
+
+/* ---------------- ERRORES ACUMULADOS ---------------- */
+function addError(message, kind='ejecución', line=null){
+  const text = (line ? ('Línea '+line+': ') : '') + message;
+  const key = kind+'|'+text;
+  if(errorKeys.has(key)) return;
+  errorKeys.add(key);
+  collectedErrors.push({kind,message:text,line});
+  log('['+kind.toUpperCase()+'] '+text, true);
+}
+function resetErrors(){
+  collectedErrors=[];
+  errorKeys=new Set();
+  runningWithErrors=false;
+}
+function reportErrorSummary(){
+  log('────────────────────────────────────────', false);
+  if(collectedErrors.length){
+    log('TOTAL DE ERRORES DETECTADOS: '+collectedErrors.length, true);
+  }else{
+    log('SIN ERRORES DETECTADOS', false);
+  }
+}
+function synchronizeParser(tokens, pos){
+  let i=pos;
+  let depth=0;
+  while(i<tokens.length){
+    const t=tokens[i];
+    if(t.type==='OP' && t.value==='{') depth++;
+    if(t.type==='OP' && t.value==='}'){
+      if(depth===0) return i;
+      depth--;
+    }
+    if(depth===0 && t.type==='OP' && t.value===';') return i+1;
+    i++;
+  }
+  return i;
+}
+
+/* ---------------- PARSER ---------------- */
+function parse(tokens){
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const nxt = (n=1) => tokens[pos+n];
+  const next = () => tokens[pos++];
+  const check = (type, value) => peek().type === type && (value === undefined || peek().value === value);
+  const match = (type, value) => check(type, value) ? next() : null;
+  const expect = (type, value) => {
+    if(check(type, value)) return next();
+    throw new Error('Se esperaba "' + (value || type) + '" cerca de "' + peek().value + '" en línea ' + peek().line);
+  };
+
+  function parseBlock(){
+    expect('OP', '{');
+    const body = [];
+    while(!check('OP', '}')){
+      if(check('EOF')) throw new Error('Falta cerrar un bloque con "}"');
+      body.push(parseStatement());
+    }
+    expect('OP', '}');
+    return body;
+  }
+
+  function parseParamList(){
+    expect('OP','(');
+    const params = [];
+    if(!check('OP',')')){
+      params.push(expect('IDENT').value);
+      while(check('OP',',')){ next(); params.push(expect('IDENT').value); }
+    }
+    expect('OP',')');
+    return params;
+  }
+
+  function parseStatement(){
+    if(check('IDENT','var')||check('IDENT','let')||check('IDENT','const')){ next(); const name = expect('IDENT').value; expect('OP','='); const expr = parseExpr(); match('OP',';'); return {type:'VarDecl',name,expr}; }
+    if(check('IDENT','funcion')){ next(); const name = expect('IDENT').value; const params = parseParamList(); const body = parseBlock(); return {type:'FuncDecl',name,params,body}; }
+    if(check('IDENT','retornar')){ next(); let expr = null; if(!check('OP',';') && !check('OP','}')) expr = parseExpr(); match('OP',';'); return {type:'Return',expr}; }
+    if(check('IDENT','romper')){ next(); match('OP',';'); return {type:'Break'}; }
+    if(check('IDENT','continuar')){ next(); match('OP',';'); return {type:'Continue'}; }
+    if(check('IDENT','si')){ next(); expect('OP','('); const cond = parseExpr(); expect('OP',')'); const thenB = parseBlock(); let elseB=null; if(check('IDENT','sino')){ next(); if(check('IDENT','si')){ next(); expect('OP','('); const ec=parseExpr(); expect('OP',')'); const eb=parseBlock(); elseB=[{type:'If',cond:ec,then:eb,else:null}]; } else { elseB=parseBlock(); } } return {type:'If',cond,then:thenB,else:elseB}; }
+    if(check('IDENT','repetir')){ next(); expect('OP','('); const count = parseExpr(); expect('OP',')'); const body = parseBlock(); return {type:'Repeat',count,body}; }
+    if(check('IDENT','para_cada')){ next(); expect('OP','('); expect('IDENT','var'); const varName = expect('IDENT').value; expect('IDENT','en'); const listExpr = parseExpr(); expect('OP',')'); const body = parseBlock(); return {type:'ForEach',varName,list:listExpr,body}; }
+    if(check('IDENT','para')){ next(); expect('OP','('); const init = parseSmallAssign(); expect('OP',';'); const cond = parseExpr(); expect('OP',';'); const update = parseSmallAssign(); expect('OP',')'); const body = parseBlock(); return {type:'For',init,cond,update,body}; }
+    if(check('IDENT','mientras')){ next(); expect('OP','('); const cond = parseExpr(); expect('OP',')'); const body = parseBlock(); return {type:'While',cond,body}; }
+    if(check('IDENT','animar')){ next(); const body = parseBlock(); return {type:'Animate',body}; }
+    if(check('IDENT') && nxt() && nxt().type==='OP' && nxt().value==='.'){
+      const savePos=pos; const name=next().value; next(); const prop=expect('IDENT').value;
+      if(check('OP','=')||check('OP','+=')||check('OP','-=')||check('OP','*=')||check('OP','/=')){ const op=next().value; const expr=parseExpr(); match('OP',';'); return {type:'PropAssign',name,prop,op,expr}; }
+      pos=savePos;
+    }
+    if(check('IDENT') && nxt() && nxt().type==='OP' && nxt().value==='['){
+      const savePos = pos;
+      const name = next().value;
+      next();
+      const indexExpr = parseExpr();
+      expect('OP',']');
+      if(check('OP','=')||check('OP','+=')||check('OP','-=')||check('OP','*=')||check('OP','/=')){
+        const op = next().value;
+        const expr = parseExpr();
+        match('OP',';');
+        return {type:'IndexAssign', name, index:indexExpr, op, expr};
+      }
+      pos = savePos;
+    }
+    if(check('IDENT') && nxt() && nxt().type==='OP' && ['=','+=','-=','*=','/='].includes(nxt().value)){
+      const name = next().value; const op = next().value; const expr = parseExpr(); match('OP',';'); return {type:'Assign',name,op,expr};
+    }
+    if(check('IDENT') && nxt() && nxt().type==='OP' && (nxt().value==='++'||nxt().value==='--')){
+      const name = next().value; const op = next().value; match('OP',';'); return {type:'IncDec',name,op};
+    }
+    const expr = parseExpr(); match('OP',';'); return {type:'ExprStmt',expr};
+  }
+
+  function parseSmallAssign(){
+    if(check('IDENT','var')||check('IDENT','let')||check('IDENT','const')){
+      next(); const name = expect('IDENT').value; expect('OP','='); const expr = parseExpr();
+      return {type:'VarDecl',name,expr};
+    }
+    if(nxt() && nxt().type==='OP' && (nxt().value==='++'||nxt().value==='--')){
+      const name = next().value; const op = next().value; return {type:'IncDec',name,op};
+    }
+    const name = expect('IDENT').value;
+    const opTok = next();
+    if(!opTok || opTok.type!=='OP' || !['=','+=','-=','*=','/='].includes(opTok.value))
+      throw new Error('Se esperaba una asignación en línea ' + (opTok ? opTok.line : peek().line));
+    const expr = parseExpr();
+    return {type:'Assign',name,op:opTok.value,expr};
+  }
+
+  function parseExpr(){ return parseTernary(); }
+  function parseTernary(){ let c=parseOr(); if(check('OP','?')){ next(); const yes=parseExpr(); expect('OP',':'); const no=parseExpr(); return {type:'Ternary',cond:c,yes,no}; } return c; }
+  function parseOr(){ let l=parseAnd(); while(check('OP','||')){ next(); l={type:'Bin',op:'||',left:l,right:parseAnd()}; } return l; }
+  function parseAnd(){ let l=parseEquality(); while(check('OP','&&')){ next(); l={type:'Bin',op:'&&',left:l,right:parseEquality()}; } return l; }
+  function parseEquality(){ let l=parseRel(); while(check('OP','==')||check('OP','!=')){ const op=next().value; l={type:'Bin',op,left:l,right:parseRel()}; } return l; }
+  function parseRel(){ let l=parseAdd(); while(check('OP','<')||check('OP','<=')||check('OP','>')||check('OP','>=')){ const op=next().value; l={type:'Bin',op,left:l,right:parseAdd()}; } return l; }
+  function parseAdd(){ let l=parseMul(); while(check('OP','+')||check('OP','-')){ const op=next().value; l={type:'Bin',op,left:l,right:parseMul()}; } return l; }
+  function parseMul(){ let l=parseUnary(); while(check('OP','*')||check('OP','/')||check('OP','%')){ const op=next().value; l={type:'Bin',op,left:l,right:parseUnary()}; } return l; }
+  function parseUnary(){ if(check('OP','-')||check('OP','!')){ const op=next().value; return {type:'Un',op,expr:parseUnary()}; } return parsePrimary(); }
+  function parsePrimary(){
+    let expr = parsePrimaryBase();
+    while(check('OP','[')||check('OP','.')){
+      if(check('OP','[')){ next(); const idx=parseExpr(); expect('OP',']'); expr={type:'Index',obj:expr,index:idx}; }
+      else { next(); const prop=expect('IDENT').value; expr={type:'Prop',obj:expr,prop}; }
+    }
+    return expr;
+  }
+  function parsePrimaryBase(){
+    if(check('NUM')) return {type:'Num', value: next().value};
+    if(check('STR')) return {type:'Str', value: next().value};
+    if(check('IDENT','verdadero')){ next(); return {type:'Bool',value:true}; }
+    if(check('IDENT','falso')){ next(); return {type:'Bool',value:false}; }
+    if(check('IDENT','nulo')||check('IDENT','null')){ next(); return {type:'Null'}; }
+    if(check('OP','{')){ next(); const pairs=[]; if(!check('OP','}')){ do { const k=next(); if(k.type!=='IDENT'&&k.type!=='STR') throw new Error('Clave de objeto inválida en línea '+k.line); expect('OP',':'); pairs.push({key:k.value,expr:parseExpr()}); if(!check('OP',',')) break; next(); } while(!check('OP','}')); } expect('OP','}'); return {type:'ObjLit',pairs}; }
+    if(check('OP','[')){
+      next();
+      const items = [];
+      if(!check('OP',']')){
+        items.push(parseExpr());
+        while(check('OP',',')){ next(); items.push(parseExpr()); }
+      }
+      expect('OP',']');
+      return {type:'ArrLit', items};
+    }
+    if(check('OP','(')){ next(); const e = parseExpr(); expect('OP',')'); return e; }
+    if(check('IDENT')){
+      const name = next().value;
+      if(check('OP','(')){
+        next(); const args = [];
+        if(!check('OP',')')){
+          args.push(parseExpr());
+          while(check('OP',',')){ next(); args.push(parseExpr()); }
+        }
+        expect('OP',')');
+        return {type:'Call', name, args};
+      }
+      return {type:'Ident', name};
+    }
+    throw new Error('No se entiende la expresión cerca de "' + peek().value + '" en línea ' + peek().line);
+  }
+
+  const body = [];
+  while(!check('EOF')){
+    const startPos=pos;
+    try{
+      body.push(parseStatement());
+    }catch(e){
+      addError(e.message,'sintaxis',peek()?.line || 1);
+      const nextPos=synchronizeParser(tokens,startPos);
+      pos=Math.max(nextPos,startPos+1);
+      // Evita bloquearse si el parser no avanzó.
+      if(pos<=startPos) pos=startPos+1;
+    }
+  }
+  return {type:'Program', body};
+}
+
+/* ---------------- SEÑALES DE CONTROL ---------------- */
+class ReturnSignal { constructor(value){ this.value = value; } }
+class BreakSignal {}
+class ContinueSignal {}
+
+/* ---------------- COLORES ---------------- */
+const COLORS = {
+  rojo:'#ff5252', azul:'#4da3ff', verde:'#4ade80', amarillo:'#ffb52e',
+  naranja:'#ff9142', morado:'#a259ff', violeta:'#a259ff', rosa:'#ff6fae',
+  blanco:'#ffffff', negro:'#0d0f12', gris:'#8a9099', cian:'#4dd8ff',
+  dorado:'#ffd24d', marron:'#8a5a3c', turquesa:'#2dd4bf', lima:'#a3e635',
+  celeste:'#7dd3fc', magenta:'#e935c1', vino:'#7f1d3d', salmon:'#ff8b7e',
+  indigo:'#6366f1', oliva:'#7c8a2e', plata:'#c7cdd6', bronce:'#b08d57',
+  coral:'#ff7f66', aguamarina:'#5eead4', lavanda:'#c4b5fd', canela:'#c68958',
+  beige:'#e8dcc4', crema:'#fff6e0', esmeralda:'#10b981', zafiro:'#2563eb',
+  rubi:'#e11d48', ambar:'#f59e0b', transparente:'rgba(0,0,0,0)'
+};
+function resolveColor(c){
+  if(typeof c !== 'string') return '#4da3ff';
+  const k = c.trim().toLowerCase();
+  return COLORS[k] || c;
+}
+
+/* ---------------- ÁMBITO DE VARIABLES ---------------- */
+function currentScope(){ return scopeStack[scopeStack.length-1]; }
+function declareVar(name, value){ currentScope()[name] = value; }
+function getVar(name){
+  for(let i=scopeStack.length-1;i>=0;i--){
+    if(Object.prototype.hasOwnProperty.call(scopeStack[i], name)) return scopeStack[i][name];
+  }
+  const b = getBuiltinVar(name);
+  if(b !== undefined) return b;
+  throw new Error('La variable "' + name + '" no está definida');
+}
+function setVar(name, value){
+  for(let i=scopeStack.length-1;i>=0;i--){
+    if(Object.prototype.hasOwnProperty.call(scopeStack[i], name)){ scopeStack[i][name] = value; return; }
+  }
+  currentScope()[name] = value;
+}
+
+function getBuiltinVar(name){
+  switch(name){
+    case 'ancho': return canvas.width;
+    case 'alto': return canvas.height;
+    case 'frame': return frameCount;
+    case 'raton_x': return mouseX;
+    case 'raton_y': return mouseY;
+    case 'raton_presionado': return mousePressed;
+    case 'click_x': return lastClickX;
+    case 'click_y': return lastClickY;
+    case 'tiempo': return Date.now() - startTime;
+    case 'segundos': return (Date.now() - startTime) / 1000;
+    case 'delta': return frameDelta;
+    case 'fps': return frameDelta > 0 ? 1 / frameDelta : 0;
+    case 'clic_reciente': return clickPulse;
+    case 'pi': return Math.PI;
+    case 'e': return Math.E;
+    case 'infinito': return Infinity;
+  }
+  return undefined;
+}
+
+/* ---------------- INTÉRPRETE ---------------- */
+function evaluate(node){
+  switch(node.type){
+    case 'Num': return node.value;
+    case 'Str': return node.value;
+    case 'Bool': return node.value;
+    case 'Null': return null;
+    case 'Ident': return getVar(node.name);
+    case 'ArrLit': return node.items.map(evaluate);
+    case 'ObjLit': { const o={}; node.pairs.forEach(p=>o[p.key]=evaluate(p.expr)); return o; }
+    case 'Prop': { const o=evaluate(node.obj); return o==null?undefined:o[node.prop]; }
+    case 'Index': {
+      const obj = evaluate(node.obj);
+      let idx = evaluate(node.index);
+      if(Array.isArray(obj) || typeof obj === 'string'){
+        if(idx < 0) idx = obj.length + idx;
+        return obj[idx];
+      }
+      if(obj !== null && typeof obj === 'object') return obj[idx];
+      throw new Error('No se puede usar [ ] sobre ese valor');
+    }
+    case 'Un': { const v = evaluate(node.expr); return node.op === '-' ? -v : !v; }
+    case 'Ternary': return evaluate(node.cond) ? evaluate(node.yes) : evaluate(node.no);
+    case 'Bin': {
+      const l = evaluate(node.left);
+      if(node.op === '&&') return l && evaluate(node.right);
+      if(node.op === '||') return l || evaluate(node.right);
+      const r = evaluate(node.right);
+      switch(node.op){
+        case '+': return l + r; case '-': return l - r; case '*': return l * r;
+        case '/': return l / r; case '%': return l % r;
+        case '==': return l === r; case '!=': return l !== r;
+        case '<': return l < r; case '<=': return l <= r; case '>': return l > r; case '>=': return l >= r;
+      }
+      break;
+    }
+    case 'Call': {
+      if(Object.prototype.hasOwnProperty.call(functions, node.name)){
+        const fn = functions[node.name];
+        const args = node.args.map(evaluate);
+        if(callDepth > 300) throw new Error('Demasiadas llamadas anidadas en "' + node.name + '()" (¿recursión infinita?)');
+        const localScope = {};
+        fn.params.forEach((p, idx) => { localScope[p] = args[idx]; });
+        scopeStack.push(localScope);
+        callDepth++;
+        let result;
+        try{
+          for(const stmt of fn.body) exec(stmt);
+          result = undefined;
+        } catch(e){
+          if(e instanceof ReturnSignal){ result = e.value; }
+          else { scopeStack.pop(); callDepth--; throw e; }
+        }
+        scopeStack.pop();
+        callDepth--;
+        return result;
+      }
+      return callBuiltin(node.name, node.args.map(evaluate));
+    }
+    default: throw new Error('Expresión desconocida');
+  }
+}
+
+function exec(node){
+  switch(node.type){
+    case 'VarDecl': declareVar(node.name, evaluate(node.expr)); return;
+    case 'Assign': {
+      let val = evaluate(node.expr);
+      if(node.op !== '='){
+        const cur = getVar(node.name);
+        if(node.op === '+=') val = cur + val;
+        else if(node.op === '-=') val = cur - val;
+        else if(node.op === '*=') val = cur * val;
+        else if(node.op === '/=') val = cur / val;
+      }
+      setVar(node.name, val); return;
+    }
+    case 'PropAssign': {
+      const obj=getVar(node.name); if(obj==null||typeof obj!=='object') throw new Error('Propiedad sobre valor no objeto');
+      let val=evaluate(node.expr); if(node.op!=='='){ const cur=obj[node.prop]; if(node.op==='+=') val=cur+val; else if(node.op==='-=') val=cur-val; else if(node.op==='*=') val=cur*val; else if(node.op==='/=') val=cur/val; } obj[node.prop]=val; return;
+    }
+    case 'IndexAssign': {
+      const arr = getVar(node.name);
+      let idx = evaluate(node.index);
+      let val = evaluate(node.expr);
+      if(!Array.isArray(arr)) throw new Error('"' + node.name + '" no es una lista');
+      if(idx < 0) idx = arr.length + idx;
+      if(node.op && node.op!=='='){
+        const cur = arr[idx];
+        if(node.op==='+=') val = cur + val;
+        else if(node.op==='-=') val = cur - val;
+        else if(node.op==='*=') val = cur * val;
+        else if(node.op==='/=') val = cur / val;
+      }
+      arr[idx] = val; return;
+    }
+    case 'IncDec': {
+      let cur = 0;
+      try{ cur = getVar(node.name); } catch(e){ cur = 0; }
+      setVar(node.name, (cur || 0) + (node.op === '++' ? 1 : -1)); return;
+    }
+    case 'ExprStmt': evaluate(node.expr); return;
+    case 'If': if(evaluate(node.cond)) node.then.forEach(exec); else if(node.else) node.else.forEach(exec); return;
+    case 'FuncDecl': functions[node.name] = {params: node.params, body: node.body}; return;
+    case 'Return': throw new ReturnSignal(node.expr ? evaluate(node.expr) : undefined);
+    case 'Break': throw new BreakSignal();
+    case 'Continue': throw new ContinueSignal();
+    case 'Repeat': {
+      const n = evaluate(node.count);
+      for(let i=0;i<n;i++){
+        declareVar('i', i);
+        try{ node.body.forEach(exec); }
+        catch(e){ if(e instanceof BreakSignal) break; if(!(e instanceof ContinueSignal)) throw e; }
+      }
+      return;
+    }
+    case 'ForEach': {
+      const arr = evaluate(node.list);
+      let items;
+      if(Array.isArray(arr)) items = arr;
+      else if(typeof arr === 'string') items = arr.split('');
+      else throw new Error('para_cada espera una lista o un texto');
+      for(const item of items){
+        declareVar(node.varName, item);
+        try{ node.body.forEach(exec); }
+        catch(e){ if(e instanceof BreakSignal) break; if(!(e instanceof ContinueSignal)) throw e; }
+      }
+      return;
+    }
+    case 'For': {
+      exec(node.init);
+      let guard = 0;
+      while(evaluate(node.cond)){
+        let brk = false;
+        try{ node.body.forEach(exec); }
+        catch(e){ if(e instanceof BreakSignal) brk = true; else if(!(e instanceof ContinueSignal)) throw e; }
+        if(brk) break;
+        exec(node.update);
+        if(++guard > 500000) throw new Error('para: demasiadas vueltas (posible bucle infinito)');
+      }
+      return;
+    }
+    case 'While': {
+      let guard = 0;
+      while(evaluate(node.cond)){
+        try{ node.body.forEach(exec); }
+        catch(e){ if(e instanceof BreakSignal) break; if(!(e instanceof ContinueSignal)) throw e; }
+        if(++guard > 500000) throw new Error('mientras: demasiadas vueltas (posible bucle infinito)');
+      }
+      return;
+    }
+    case 'Animate': animateAst = node.body; return;
+    default: throw new Error('Instrucción desconocida');
+  }
+}
+
+/* ---------------- FUNCIONES INCORPORADAS ---------------- */
+function drawImageCached(url,x,y,w,h){
+  let im = imgCache[url];
+  if(im && im.__loaded){ ctx.drawImage(im,x,y,w,h); return; }
+  if(!im){ im = new Image(); im.crossOrigin = 'anonymous'; im.src = url; imgCache[url] = im; }
+  im.addEventListener('load', () => { im.__loaded = true; try{ ctx.drawImage(im,x,y,w,h); }catch(e){} }, {once:true});
+}
+
+function callBuiltin(name, args){
+  switch(name){
+    /* --- dibujo básico --- */
+    case 'fondo': ctx.fillStyle = resolveColor(args[0]); ctx.fillRect(0,0,canvas.width,canvas.height); return;
+    case 'limpiar': ctx.clearRect(0,0,canvas.width,canvas.height); return;
+    case 'circulo': { const [x,y,r,color]=args; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=resolveColor(color||'azul'); ctx.fill(); return; }
+    case 'circuloContorno': { const [x,y,r,color,grosor]=args; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.strokeStyle=resolveColor(color||'blanco'); ctx.lineWidth=grosor||2; ctx.stroke(); return; }
+    case 'rectangulo': { const [x,y,w,h,color]=args; ctx.fillStyle=resolveColor(color||'azul'); ctx.fillRect(x,y,w,h); return; }
+    case 'rectanguloContorno': { const [x,y,w,h,color,grosor]=args; ctx.strokeStyle=resolveColor(color||'blanco'); ctx.lineWidth=grosor||2; ctx.strokeRect(x,y,w,h); return; }
+    case 'rectanguloRedondeado': {
+      const [x,y,w,h,radio,color]=args;
+      const r = Math.min(radio||10, Math.abs(w)/2, Math.abs(h)/2);
+      ctx.beginPath(); ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r);
+      ctx.closePath(); ctx.fillStyle=resolveColor(color||'azul'); ctx.fill(); return;
+    }
+    case 'linea': { const [x1,y1,x2,y2,color,grosor]=args; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.strokeStyle=resolveColor(color||'blanco'); ctx.lineWidth=grosor||2; ctx.stroke(); return; }
+    case 'lineaPunteada': {
+      const [x1,y1,x2,y2,color,grosor,patron]=args;
+      ctx.save(); ctx.setLineDash(patron ? [patron,patron] : [6,6]);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.strokeStyle=resolveColor(color||'blanco'); ctx.lineWidth=grosor||2; ctx.stroke();
+      ctx.restore(); return;
+    }
+    case 'triangulo': { const [x1,y1,x2,y2,x3,y3,color]=args; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.closePath(); ctx.fillStyle=resolveColor(color||'azul'); ctx.fill(); return; }
+    case 'texto': { const [x,y,txt,size,color,font]=args; ctx.textAlign='left'; ctx.fillStyle=resolveColor(color||'blanco'); ctx.font=(size||20)+'px '+(font||'Arial, sans-serif'); ctx.fillText(String(txt),x,y); return; }
+    case 'textoCentrado': {
+      const [x,y,txt,size,color,font]=args;
+      ctx.save(); ctx.textAlign='center';
+      ctx.fillStyle=resolveColor(color||'blanco'); ctx.font=(size||20)+'px '+(font||'Arial, sans-serif');
+      ctx.fillText(String(txt),x,y); ctx.restore(); return;
+    }
+    case 'imagen': { const [url,x,y,w,h]=args; drawImageCached(url,x,y,w,h); return; }
+    case 'trazo_iniciar': currentPath = [{x:args[0], y:args[1]}]; return;
+    case 'trazo_linea': if(currentPath) currentPath.push({t:'l', x:args[0], y:args[1]}); return;
+    case 'trazo_curva': if(currentPath) currentPath.push({t:'q', cx:args[0], cy:args[1], x:args[2], y:args[3]}); return;
+    case 'trazo_cerrar': {
+      if(!currentPath) return;
+      const color = args[0] || 'blanco', modo = args[1] || 'relleno';
+      ctx.beginPath(); ctx.moveTo(currentPath[0].x, currentPath[0].y);
+      for(let i=1;i<currentPath.length;i++){ const p=currentPath[i]; if(p.t==='q') ctx.quadraticCurveTo(p.cx,p.cy,p.x,p.y); else ctx.lineTo(p.x,p.y); }
+      ctx.closePath();
+      if(modo === 'borde'){ ctx.strokeStyle = resolveColor(color); ctx.lineWidth = 2; ctx.stroke(); }
+      else { ctx.fillStyle = resolveColor(color); ctx.fill(); }
+      currentPath = null; return;
+    }
+    case 'tamanoLienzo': canvas.width = args[0]; canvas.height = args[1]; return;
+    case 'detener': stopAnim(); return;
+    case 'imprimir': log(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')); return;
+    case 'tipo': { const v=args[0]; if(v===null) return 'nulo'; if(Array.isArray(v)) return 'lista'; if(typeof v==='object') return 'objeto'; return typeof v==='number'?'numero':typeof v==='string'?'texto':typeof v==='boolean'?'booleano':typeof v; }
+    case 'esNumero': return typeof args[0]==='number' && Number.isFinite(args[0]);
+    case 'esTexto': return typeof args[0]==='string';
+    case 'esLista': return Array.isArray(args[0]);
+    case 'esObjeto': return args[0]!==null && typeof args[0]==='object' && !Array.isArray(args[0]);
+    case 'objeto': return {};
+    case 'poner': { const o=args[0]; if(o==null||typeof o!=='object') throw new Error('poner() necesita un objeto'); o[String(args[1])]=args[2]; return o; }
+    case 'obtener': { const o=args[0]; return o==null?undefined:o[String(args[1])]; }
+    case 'eliminar': { const o=args[0]; if(o&&typeof o==='object') delete o[String(args[1])]; return o; }
+    case 'tiene': { const o=args[0]; return o!=null && Object.prototype.hasOwnProperty.call(o,String(args[1])); }
+    case 'claves': { const o=args[0]; return o&&typeof o==='object'?Object.keys(o):[]; }
+    case 'valores': { const o=args[0]; return o&&typeof o==='object'?Object.values(o):[]; }
+    case 'longitud': { const v=args[0]; return v!=null && v.length!==undefined ? v.length : 0; }
+    case 'recortar': return String(args[0]).trim();
+    case 'separar': return String(args[0]).split(args[1]===undefined?',':args[1]);
+    case 'empiezaCon': return String(args[0]).startsWith(String(args[1]));
+    case 'terminaCon': return String(args[0]).endsWith(String(args[1]));
+    case 'caracter': return String(args[0])[args[1]];
+    case 'repetirTexto': return String(args[0]).repeat(Math.max(0,Math.floor(args[1])));
+    case 'subLista': return args[0].slice(args[1],args[2]);
+    case 'copiarLista': return Array.isArray(args[0])?args[0].slice():[];
+    case 'lista_indice': return args[0].indexOf(args[1]);
+    case 'lista_reemplazar': { args[0][args[1]]=args[2]; return args[0]; }
+    case 'senGrados': return Math.sin(args[0]*Math.PI/180);
+    case 'cosGrados': return Math.cos(args[0]*Math.PI/180);
+    case 'tanGrados': return Math.tan(args[0]*Math.PI/180);
+    case 'punto': { const [x,y,c]=args; ctx.fillStyle=resolveColor(c||'blanco'); ctx.fillRect(x,y,1,1); return; }
+    case 'cuadrado': { const [x,y,l,c]=args; ctx.fillStyle=resolveColor(c||'azul'); ctx.fillRect(x,y,l,l); return; }
+    case 'rombo': { const [x,y,w,h,c,rot]=args; ctx.save(); ctx.translate(x,y); ctx.rotate((rot||0)*Math.PI/180); ctx.beginPath(); ctx.moveTo(0,-h/2); ctx.lineTo(w/2,0); ctx.lineTo(0,h/2); ctx.lineTo(-w/2,0); ctx.closePath(); ctx.fillStyle=resolveColor(c||'azul'); ctx.fill(); ctx.restore(); return; }
+    case 'estrella': { const [x,y,puntas,r1,r2,c,rot]=args; const n=Math.max(2,Math.round(puntas||5)); ctx.beginPath(); for(let k=0;k<n*2;k++){ const rr=k%2===0?r1:r2; const a=(rot||0)*Math.PI/180+k*Math.PI/n-Math.PI/2; const px=x+Math.cos(a)*rr, py=y+Math.sin(a)*rr; k?ctx.lineTo(px,py):ctx.moveTo(px,py); } ctx.closePath(); ctx.fillStyle=resolveColor(c||'amarillo'); ctx.fill(); return; }
+    case 'corazon': { const [x,y,t,c,s]=args; const z=s||1; ctx.save(); ctx.translate(x,y); ctx.scale(z,z); ctx.beginPath(); ctx.moveTo(0,30); ctx.bezierCurveTo(-70,-10,-35,-55,0,-25); ctx.bezierCurveTo(35,-55,70,-10,0,30); ctx.closePath(); if((t||'relleno')==='borde'){ctx.strokeStyle=resolveColor(c||'rosa');ctx.stroke();}else{ctx.fillStyle=resolveColor(c||'rosa');ctx.fill();} ctx.restore(); return; }
+    case 'flecha': { const [x1,y1,x2,y2,c,g]=args; const ang=Math.atan2(y2-y1,x2-x1), size=(g||2)*5; ctx.save(); ctx.strokeStyle=resolveColor(c||'blanco'); ctx.fillStyle=resolveColor(c||'blanco'); ctx.lineWidth=g||2; ctx.beginPath(); ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-size*Math.cos(ang-.5),y2-size*Math.sin(ang-.5));ctx.lineTo(x2-size*Math.cos(ang+.5),y2-size*Math.sin(ang+.5));ctx.closePath();ctx.fill();ctx.restore();return; }
+    case 'rejilla': { const [esp,c,g]=args; const e=Math.max(2,esp||20); ctx.save(); ctx.strokeStyle=resolveColor(c||'#333'); ctx.lineWidth=g||1; for(let x=0;x<=canvas.width;x+=e){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();} for(let y=0;y<=canvas.height;y+=e){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();} ctx.restore(); return; }
+    case 'medirTexto': { const [txt,size,color,font]=args; ctx.save();ctx.font=(size||20)+'px '+(font||'Arial, sans-serif');const m=ctx.measureText(String(txt));ctx.restore();return m.width; }
+    case 'fuente': ctx.font=(args[0]||20)+'px '+(args[1]||'Arial, sans-serif'); return;
+    case 'alinear': ctx.textAlign=args[0]||'left'; return;
+    case 'lineaEstilo': { ctx.lineCap=args[0]||'butt'; ctx.lineJoin=args[1]||'miter'; return; }
+    case 'grosor': ctx.lineWidth=args[0]||1; return;
+    case 'colorRelleno': ctx.fillStyle=resolveColor(args[0]); return;
+    case 'colorBorde': ctx.strokeStyle=resolveColor(args[0]); return;
+    case 'borde': ctx.stroke(); return;
+    case 'rellenar': ctx.fill(); return;
+    case 'resetearTransformacion': ctx.setTransform(1,0,0,1,0,0); return;
+    case 'composicion': ctx.globalCompositeOperation=args[0]||'source-over'; return;
+    case 'limpiarRect': ctx.clearRect(args[0],args[1],args[2],args[3]); return;
+    case 'rellenarRect': ctx.fillRect(args[0],args[1],args[2],args[3]); return;
+    case 'bordeRect': ctx.strokeRect(args[0],args[1],args[2],args[3]); return;
+    case 'milisegundos': return Date.now();
+
+    /* --- formas nuevas --- */
+    case 'elipse': { const [x,y,rx,ry,color,rot]=args; ctx.beginPath(); ctx.ellipse(x,y,rx,ry,(rot||0)*Math.PI/180,0,Math.PI*2); ctx.fillStyle=resolveColor(color||'azul'); ctx.fill(); return; }
+    case 'elipseContorno': { const [x,y,rx,ry,color,grosor,rot]=args; ctx.beginPath(); ctx.ellipse(x,y,rx,ry,(rot||0)*Math.PI/180,0,Math.PI*2); ctx.strokeStyle=resolveColor(color||'blanco'); ctx.lineWidth=grosor||2; ctx.stroke(); return; }
+    case 'arco': { const [x,y,r,a1,a2,color,grosor]=args; ctx.beginPath(); ctx.arc(x,y,r,(a1||0)*Math.PI/180,(a2||0)*Math.PI/180); ctx.strokeStyle=resolveColor(color||'blanco'); ctx.lineWidth=grosor||2; ctx.stroke(); return; }
+    case 'arcoRelleno': { const [x,y,r,a1,a2,color]=args; ctx.beginPath(); ctx.moveTo(x,y); ctx.arc(x,y,r,(a1||0)*Math.PI/180,(a2||0)*Math.PI/180); ctx.closePath(); ctx.fillStyle=resolveColor(color||'azul'); ctx.fill(); return; }
+    case 'poligono': {
+      const [x,y,lados,r,color,rot]=args; const n = Math.max(3, Math.round(lados));
+      ctx.beginPath();
+      for(let k=0;k<n;k++){ const ang=(rot||0)*Math.PI/180 + k*2*Math.PI/n - Math.PI/2; const px=x+r*Math.cos(ang), py=y+r*Math.sin(ang); if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); }
+      ctx.closePath(); ctx.fillStyle=resolveColor(color||'azul'); ctx.fill(); return;
+    }
+    case 'poligonoContorno': {
+      const [x,y,lados,r,color,grosor,rot]=args; const n = Math.max(3, Math.round(lados));
+      ctx.beginPath();
+      for(let k=0;k<n;k++){ const ang=(rot||0)*Math.PI/180 + k*2*Math.PI/n - Math.PI/2; const px=x+r*Math.cos(ang), py=y+r*Math.sin(ang); if(k===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); }
+      ctx.closePath(); ctx.strokeStyle=resolveColor(color||'blanco'); ctx.lineWidth=grosor||2; ctx.stroke(); return;
+    }
+
+    /* --- degradados, sombras, transformaciones --- */
+    case 'fondoDegradado': {
+      const [c1,c2,dir]=args;
+      const grad = (dir==='horizontal') ? ctx.createLinearGradient(0,0,canvas.width,0) : ctx.createLinearGradient(0,0,0,canvas.height);
+      grad.addColorStop(0, resolveColor(c1)); grad.addColorStop(1, resolveColor(c2));
+      ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width,canvas.height); return;
+    }
+    case 'circuloDegradado': {
+      const [x,y,r,c1,c2]=args;
+      const grad = ctx.createRadialGradient(x,y,0,x,y,r);
+      grad.addColorStop(0, resolveColor(c1)); grad.addColorStop(1, resolveColor(c2));
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle = grad; ctx.fill(); return;
+    }
+    case 'sombra': { const [color,desenfoque,dx,dy]=args; ctx.shadowColor=resolveColor(color||'negro'); ctx.shadowBlur=desenfoque||10; ctx.shadowOffsetX=dx||0; ctx.shadowOffsetY=dy||0; return; }
+    case 'quitarSombra': ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0; return;
+    case 'opacidad': ctx.globalAlpha = args[0]; return;
+    case 'guardar': ctx.save(); return;
+    case 'restaurar': ctx.restore(); return;
+    case 'trasladar': ctx.translate(args[0],args[1]); return;
+    case 'rotar': ctx.rotate((args[0]||0)*Math.PI/180); return;
+    case 'escalar': ctx.scale(args[0],args[1]); return;
+
+    /* --- texto --- */
+    case 'mayusculas': return String(args[0]).toUpperCase();
+    case 'minusculas': return String(args[0]).toLowerCase();
+    case 'longitudTexto': return String(args[0]).length;
+    case 'subTexto': return String(args[0]).substring(args[1], args[2]);
+    case 'reemplazar': return String(args[0]).split(args[1]).join(args[2]);
+    case 'incluye': return String(args[0]).includes(args[1]);
+    case 'unir': return args.map(a => String(a)).join('');
+    case 'textoANumero': return parseFloat(args[0]);
+    case 'numeroATexto': return String(args[0]);
+
+    /* --- listas --- */
+    case 'lista_agregar': { args[0].push(args[1]); return args[0]; }
+    case 'lista_quitar': { args[0].splice(args[1],1); return args[0]; }
+    case 'lista_longitud': return args[0].length;
+    case 'lista_contiene': return args[0].includes(args[1]);
+    case 'lista_vacia': return args[0].length === 0;
+    case 'lista_ordenar': { const c = args[0].slice(); c.sort((a,b)=> (typeof a==='number'&&typeof b==='number') ? a-b : String(a).localeCompare(String(b))); return c; }
+    case 'lista_invertir': return args[0].slice().reverse();
+    case 'lista_unir': return args[0].join(args[1] !== undefined ? args[1] : ',');
+
+    /* --- teclado / mouse --- */
+    case 'tecla_presionada': return keysDown.has(String(args[0]).toLowerCase());
+
+    /* --- matemáticas --- */
+    case 'random': return Math.random() * (args[1]-args[0]) + args[0];
+    case 'randomEntero': return Math.floor(Math.random() * (args[1]-args[0]+1)) + args[0];
+    case 'elegir': return args[Math.floor(Math.random()*args.length)];
+    case 'aleatorioBooleano': return Math.random() < 0.5;
+    case 'sin': return Math.sin(args[0]);
+    case 'cos': return Math.cos(args[0]);
+    case 'tan': return Math.tan(args[0]);
+    case 'asin': return Math.asin(args[0]);
+    case 'acos': return Math.acos(args[0]);
+    case 'atan': return Math.atan(args[0]);
+    case 'atan2': return Math.atan2(args[0],args[1]);
+    case 'gradosARadianes': return args[0]*Math.PI/180;
+    case 'radianesAGrados': return args[0]*180/Math.PI;
+    case 'raiz': return Math.sqrt(args[0]);
+    case 'abs': return Math.abs(args[0]);
+    case 'potencia': return Math.pow(args[0],args[1]);
+    case 'log': return Math.log(args[0]);
+    case 'log10': return Math.log10(args[0]);
+    case 'exp': return Math.exp(args[0]);
+    case 'redondear': return Math.round(args[0]);
+    case 'piso': return Math.floor(args[0]);
+    case 'techo': return Math.ceil(args[0]);
+    case 'signo': return Math.sign(args[0]);
+    case 'min': return Math.min.apply(null,args);
+    case 'max': return Math.max.apply(null,args);
+    case 'limitar': return Math.min(Math.max(args[0],args[1]),args[2]);
+    case 'mapear': { const [v,a1,a2,b1,b2]=args; return b1 + (v-a1)*(b2-b1)/(a2-a1); }
+    case 'distancia': return Math.hypot(args[2]-args[0], args[3]-args[1]);
+    case 'anguloHacia': return Math.atan2(args[3]-args[1], args[2]-args[0]) * 180/Math.PI;
+    case 'hipotenusa': return Math.hypot(args[0],args[1]);
+
+    /* --- juegos, física y simulación --- */
+    case 'colisionRect': { const [ax,ay,aw,ah,bx,by,bw,bh]=args; return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by; }
+    case 'puntoEnRect': { const [px,py,x,y,w,h]=args; return px>=x && px<=x+w && py>=y && py<=y+h; }
+    case 'puntoEnCirculo': { const [px,py,x,y,r]=args; return Math.hypot(px-x,py-y)<=r; }
+    case 'colisionCirculos': { const [x1,y1,r1,x2,y2,r2]=args; return Math.hypot(x2-x1,y2-y1)<=r1+r2; }
+    case 'distanciaX': return args[2]-args[0];
+    case 'distanciaY': return args[3]-args[1];
+    case 'interpolar': return args[0] + (args[1]-args[0])*args[2];
+    case 'aproximar': { const [v,t,paso]=args; const d=t-v; const p=Math.abs(paso||0); return Math.abs(d)<=p ? t : v + Math.sign(d)*p; }
+    case 'moverXHacia': { const [x,t,vel,dt]=args; const d=t-x; const paso=Math.abs(vel||0)*(dt===undefined?frameDelta:dt); return Math.abs(d)<=paso?t:x+Math.sign(d)*paso; }
+    case 'moverYHacia': { const [y,t,vel,dt]=args; const d=t-y; const paso=Math.abs(vel||0)*(dt===undefined?frameDelta:dt); return Math.abs(d)<=paso?t:y+Math.sign(d)*paso; }
+    case 'senGrados': return Math.sin(args[0]*Math.PI/180);
+    case 'cosGrados': return Math.cos(args[0]*Math.PI/180);
+    case 'tanGrados': return Math.tan(args[0]*Math.PI/180);
+    case 'anguloVector': return Math.atan2(args[1],args[0])*180/Math.PI;
+    case 'vectorX': return Math.cos(args[0]*Math.PI/180)*args[1];
+    case 'vectorY': return Math.sin(args[0]*Math.PI/180)*args[1];
+    case 'camara': { const [x,y,zoom]=args; const z=zoom===undefined?1:zoom; ctx.setTransform(z,0,0,z,canvas.width/2-x*z,canvas.height/2-y*z); return; }
+    case 'coordenadaMundoX': return (args[0]-canvas.width/2)/(args[2]||1)+args[1];
+    case 'coordenadaMundoY': return (args[0]-canvas.height/2)/(args[2]||1)+args[1];
+    case 'rectVisible': { const [x,y,w,h]=args; return x+w>0 && y+h>0 && x<canvas.width && y<canvas.height; }
+    case 'crearLista': { const [n,v]=args; return Array.from({length:Math.max(0,Math.floor(n||0))},()=>v); }
+    case 'rellenarLista': { const [arr,v]=args; for(let i=0;i<arr.length;i++) arr[i]=v; return arr; }
+    case 'subLista': { const [arr,a,b]=args; return arr.slice(a,b); }
+    case 'copiarLista': return Array.isArray(args[0]) ? args[0].slice() : args[0];
+    case 'lista_indice': return Array.isArray(args[0]) ? args[0].indexOf(args[1]) : -1;
+    case 'lista_reemplazar': { const [arr,i,v]=args; arr[i<0?arr.length+i:i]=v; return arr; }
+    case 'contar': { const [arr,v]=args; return arr.reduce((n,x)=>n+(x===v?1:0),0); }
+    case 'sumaLista': return Array.isArray(args[0]) ? args[0].reduce((a,b)=>a+(Number(b)||0),0) : 0;
+    case 'promedioLista': { const a=args[0]||[]; return a.length ? a.reduce((x,y)=>x+(Number(y)||0),0)/a.length : 0; }
+    case 'mezclarLista': { const a=args[0].slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+    case 'indiceAleatorio': { const a=args[0]||[]; return a.length?Math.floor(Math.random()*a.length):-1; }
+    case 'azarDeLista': { const a=args[0]||[]; return a.length?a[Math.floor(Math.random()*a.length)]:undefined; }
+    case 'mouseEnRect': return callBuiltin('puntoEnRect',[mouseX,mouseY,...args]);
+    case 'clickEnRect': return clickPulse && callBuiltin('puntoEnRect',[lastClickX,lastClickY,...args]);
+    case 'clickEnCirculo': return clickPulse && callBuiltin('puntoEnCirculo',[lastClickX,lastClickY,...args]);
+    case 'tecla_justo_presionada': { const k=String(args[0]).toLowerCase(); return keysDown.has(k)&&!previousKeys.has(k); }
+    case 'tecla_justo_soltada': { const k=String(args[0]).toLowerCase(); return !keysDown.has(k)&&previousKeys.has(k); }
+    case 'guardarDato': { try{localStorage.setItem(String(args[0]),JSON.stringify(args[1]));return true;}catch(e){return false;} }
+    case 'cargarDato': { try{const v=localStorage.getItem(String(args[0]));return v===null?args[1]:JSON.parse(v);}catch(e){return args[1];} }
+    case 'borrarDato': { try{localStorage.removeItem(String(args[0]));}catch(e){} return; }
+    case 'existeDato': { try{return localStorage.getItem(String(args[0]))!==null;}catch(e){return false;} }
+    case 'copiarPortapapeles': { try{navigator.clipboard.writeText(String(args[0]));}catch(e){} return; }
+    case 'alerta': window.alert(String(args[0])); return;
+    case 'sonido': { try{ const A=window.AudioContext||window.webkitAudioContext; if(!A)return; window.__flashirAudio ||= new A(); const ac=window.__flashirAudio,o=ac.createOscillator(),g=ac.createGain(),hz=Number(args[0]||440),ms=Math.max(15,Number(args[1]||90)),vol=Math.max(0,Math.min(1,Number(args[2]===undefined?.06:args[2]))); o.frequency.value=hz;g.gain.value=vol;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+ms/1000);}catch(e){} return; }
+    case 'guardarEstado': return {x:args[0],y:args[1],vx:args[2],vy:args[3]};
+
+     /* --- color y utilidades varias --- */
+    case 'colorAleatorio': return '#' + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
+    case 'oscurecerColor': { const [c,f]=args; const {r,g,b}=colorToRGB(c); const factor=1-(f===undefined?0.2:f); return rgbToHex(r*factor,g*factor,b*factor); }
+    case 'aclararColor': { const [c,f]=args; const {r,g,b}=colorToRGB(c); const factor=(f===undefined?0.2:f); return rgbToHex(r+(255-r)*factor, g+(255-g)*factor, b+(255-b)*factor); }
+    case 'colorRGBA': { const [r,g,b,a]=args; return 'rgba(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ',' + (a===undefined?1:a) + ')'; }
+    case 'vibrar': { try{ navigator.vibrate && navigator.vibrate(args[0]||100); }catch(e){} return; }
+    case 'reloj': { const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0'); }
+    case 'fecha': return new Date().toLocaleDateString();
+
+    default: throw new Error('La función "' + name + '()" no existe');
+  }
+}
+
+/* ---------------- EJECUCIÓN Y ANIMACIÓN ---------------- */
+function stopAnim(){
+  if(animId){ cancelAnimationFrame(animId); animId = null; }
+  stopBtn.disabled = true;
+}
+
+function startAnim(){
+  stopBtn.disabled = false;
+  function frame(){
+    const now=performance.now();
+    frameDelta=Math.min(0.1,Math.max(0,(now-lastFrameTime)/1000));
+    lastFrameTime=now;
+    frameCount++;
+    let frameHadError=false;
+    animateAst.forEach(stmt=>{
+      try{ exec(stmt); }
+      catch(e){
+        frameHadError=true;
+        addError('animar{}: '+(e && e.message ? e.message : String(e)),'ejecución');
+      }
+    });
+    if(frameHadError) runningWithErrors=true;
+    previousKeys = new Set(keysDown);
+    clickPulse = false;
+    animId = requestAnimationFrame(frame);
+  }
+  lastFrameTime=performance.now();
+  previousKeys = new Set(keysDown);
+  animId = requestAnimationFrame(frame);
+}
+
+function runProgram(){
+  stopAnim();
+  scopeStack = [{}];
+  functions = {};
+  callDepth = 0;
+  currentPath = null;
+  animateAst = null;
+  frameCount = 0;
+  frameDelta = 1/60;
+  lastFrameTime = performance.now();
+  previousKeys = new Set(keysDown);
+  clickPulse = false;
+  startTime = Date.now();
+  ctx.globalAlpha = 1;
+  consoleEl.innerHTML = '';
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  resetErrors();
+  collectedErrors = [];
+  errorKeys = new Set();
+  runningWithErrors = false;
+
+  let ast;
+  try{
+    const tokens = tokenize(codeEl.value);
+    ast = parse(tokens);
+  }catch(e){
+    addError('No se pudo analizar el programa: '+e.message,'sintaxis');
+    reportErrorSummary();
+    return;
+  }
+
+  // Registrar primero las funciones válidas para que puedan usarse aunque otra
+  // instrucción independiente contenga un error.
+  try{
+    ast.body.filter(n => n.type === 'FuncDecl').forEach(exec);
+  }catch(e){
+    addError(e.message,'ejecución');
+  }
+
+  for(const stmt of ast.body){
+    if(stmt.type==='FuncDecl') continue;
+    try{
+      exec(stmt);
+    }catch(e){
+      addError(e.message,'ejecución',stmt.line || null);
+      runningWithErrors=true;
+    }
+  }
+
+  reportErrorSummary();
+  if(animateAst) startAnim();
+}
+
+
+/* ---------------- FLASNG2 EXPORT ---------------- */
+const FLASNG_FORMAT_VERSION="2";
+const FLASNG_XOR_KEY="FLASHING-FLASNG-CORE-V1";
+
+function flasng2Xor(bytes){
+  const key=new TextEncoder().encode(FLASNG_XOR_KEY);
+  const out=new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++) out[i]=bytes[i]^key[i%key.length];
+  return out;
+}
+function flasng2Hex(bytes){
+  let out="";
+  for(const b of bytes) out+=b.toString(16).padStart(2,"0");
+  return out.toUpperCase();
+}
+function flasng2Encode(text){
+  return flasng2Hex(flasng2Xor(new TextEncoder().encode(text)));
+}
+function flashirExportPayload(){
+  const payload={
+    format:"FLASNG2",
+    version:2,
+    engine:"Flashir",
+    language:"FLASHIR",
+    source:codeEl.value,
+    width:canvas.width,
+    height:canvas.height,
+    createdAt:new Date().toISOString(),
+    runtime:"Flashir-2",
+    features:{
+      animation:true,
+      keyboard:true,
+      mouse:true,
+      canvas:true,
+      customLanguage:true
+    }
+  };
+  return JSON.stringify(payload);
+}
+function exportFlashirGame(){
+  const payload=flashirExportPayload();
+  const hex=flasng2Encode(payload);
+  const header=[
+    "FLASNG/2",
+    "FORMAT CUSTOM REVERSIBLE",
+    "ENGINE Flashir",
+    "LANGUAGE FLASHIR",
+    "CRYPTO XOR-REPEATING-KEY-V1",
+    "KEY-ID FLASHING-FLASNG-CORE-V1",
+    "PAYLOAD HEX-XOR"
+  ].join("\n");
+  const content=header+"\n"+hex+"\nEND-FLASNG\n";
+  const blob=new Blob([content],{type:"application/x-flasng"});
+  const a=document.createElement("a");
+  a.download=(document.title||"flashir").replace(/[^a-z0-9_-]+/gi,"_")+".flasng";
+  a.href=URL.createObjectURL(blob);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  log("Juego exportado como FLASNG2: "+a.download);
+}
+
+/* ---------------- INTERFAZ ---------------- */
+runBtn.addEventListener('click', runProgram);
+stopBtn.addEventListener('click', stopAnim);
+exportGameBtn.addEventListener('click', exportFlashirGame);
+downloadBtn.addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.download = 'flashir.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+});
+helpBtn.addEventListener('click', () => helpModal.classList.add('show'));
+helpClose.addEventListener('click', () => helpModal.classList.remove('show'));
+helpModal.addEventListener('click', e => { if(e.target === helpModal) helpModal.classList.remove('show'); });
+
+codeEl.addEventListener('keydown', e => {
+  if(e.key === 'Tab'){ e.preventDefault(); const s=codeEl.selectionStart, en=codeEl.selectionEnd; codeEl.value = codeEl.value.slice(0,s) + '  ' + codeEl.value.slice(en); codeEl.selectionStart = codeEl.selectionEnd = s+2; }
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); runProgram(); }
+});
+
+/* ---------------- MUESTRA DE COLORES EN LA AYUDA ---------------- */
+(function renderSwatches(){
+  const wrap = document.getElementById('swatches');
+  Object.keys(COLORS).forEach(name => {
+    const el = document.createElement('span');
+    el.className = 'sw';
+    el.innerHTML = '<i style="background:' + COLORS[name] + '"></i>' + name;
+    wrap.appendChild(el);
+  });
+})();
+
+const EXAMPLES = {
+ basico:
+`# Formas básicas
+fondo("#101014");
+circulo(150, 200, 80, "azul");
+rectangulo(280, 130, 160, 100, "naranja");
+triangulo(480, 300, 550, 150, 580, 300, "verde");
+texto(40, 50, "¡Hola, Flashir!", 30, "blanco");`,
+
+aleatorio:
+`# Círculos aleatorios
+fondo("#0d0f12");
+repetir(60) {
+  circulo(random(0, ancho), random(0, alto), random(4, 35), "rosa");
+}`,
+
+rebote:
+`# Pelota rebotando
+var x = 200;
+var y = 100;
+var vx = 4;
+var vy = 3;
+
+animar {
+  fondo("#101014");
+  x = x + vx;
+  y = y + vy;
+  si (x > ancho - 30 || x < 30) { vx = vx * -1; }
+  si (y > alto - 30 || y < 30) { vy = vy * -1; }
+  circulo(x, y, 30, "amarillo");
+}`,
+
+mouse:
+`# Círculo que sigue al mouse
+animar {
+  fondo("#0d0f12");
+  circuloContorno(raton_x, raton_y, 40, "cian", 3);
+  texto(20, 30, "Mové el mouse sobre el lienzo", 16, "blanco");
+}`,
+
+cara:
+`# Cara dibujada con trazos
+fondo("#fff4e0");
+circulo(300, 200, 130, "amarillo");
+circulo(255, 165, 16, "negro");
+circulo(345, 165, 16, "negro");
+trazo_iniciar(230, 240);
+trazo_curva(300, 300, 370, 240);
+trazo_cerrar("negro", "borde");`,
+
+funciones:
+`# Funciones propias (incluye recursión)
+funcion doble(n) {
+  retornar n * 2;
+}
+
+funcion factorial(n) {
+  si (n <= 1) { retornar 1; }
+  retornar n * factorial(n - 1);
+}
+
+fondo("#101014");
+texto(30, 60, "El doble de 21 es " + doble(21), 22, "blanco");
+texto(30, 100, "5! (factorial) es " + factorial(5), 22, "amarillo");`,
+
+listas:
+`# Listas y para_cada
+fondo("#0d0f12");
+var frutas = ["manzana", "pera", "uva", "kiwi", "sandía"];
+var colores = ["rojo", "naranja", "morado", "verde", "rosa"];
+var y = 40;
+var i = 0;
+para_cada (var fruta en frutas) {
+  texto(40, y, fruta, 24, colores[i]);
+  y = y + 40;
+  i = i + 1;
+}`,
+
+teclado:
+`# Mové el cuadrado con las flechas del teclado
+var x = 300;
+var y = 200;
+
+animar {
+  fondo("#101014");
+  si (tecla_presionada("arrowleft")) { x = x - 4; }
+  si (tecla_presionada("arrowright")) { x = x + 4; }
+  si (tecla_presionada("arrowup")) { y = y - 4; }
+  si (tecla_presionada("arrowdown")) { y = y + 4; }
+  x = limitar(x, 20, ancho - 20);
+  y = limitar(y, 20, alto - 20);
+  rectangulo(x - 20, y - 20, 40, 40, "verde");
+  texto(20, 30, "Usá las flechas del teclado", 16, "blanco");
+}`,
+
+degradado:
+`# Degradados y sombras
+fondoDegradado("#1c1f4a", "#ff6fae", "vertical");
+sombra("#000000", 25, 8, 8);
+circuloDegradado(300, 200, 110, "#ffe08a", "#ff7f66");
+quitarSombra();
+textoCentrado(300, 370, "Degradados y sombras", 20, "blanco");`,
+
+objetos:
+`# Objetos + ternario
+var jugador = {nombre: "Flash", puntos: 125, vida: 100};
+fondo("#101014");
+texto(30,60,jugador.nombre,30,"cian");
+texto(30,100,"Puntos: " + jugador.puntos,22,"blanco");
+texto(30,140,jugador.vida > 0 ? "VIVO" : "GAME OVER",22,"verde");
+jugador.puntos += 25;
+imprimir(claves(jugador));`,
+
+formas:
+`# Primitivas ampliadas
+fondo("#101014");
+rejilla(40,"#252932",1);
+estrella(120,180,5,80,35,"dorado",0);
+rombo(300,180,160,110,"morado",15);
+corazon(470,180,"relleno","rosa",1.5);
+flecha(80,320,520,320,"cian",4);
+textoCentrado(300,380,"Más geometría en Flashir",22,"blanco");`,
+
+poligonos:
+`# Polígonos rotando
+var angulo = 0;
+
+animar {
+  fondo("#0d0f12");
+  angulo = angulo + 1;
+  guardar();
+  trasladar(300, 200);
+  rotar(angulo);
+  poligonoContorno(0, 0, 6, 120, "cian", 3);
+  poligono(0, 0, 3, 60, "rosa", -angulo * 2);
+  restaurar();
+}`,
+tetris:
+`# MINI TETRIS — tablero, gravedad, piezas, líneas y puntuación
+const cols = 10;
+const filas = 20;
+const tam = 18;
+var tablero = crearLista(cols * filas, "");
+var px = 4;
+var py = 0;
+var cayendo = 0;
+var puntos = 0;
+var fin = falso;
+var colores = ["cian","amarillo","morado","verde","rojo","azul","naranja"];
+
+funcion celda(x,y) { retornar y * cols + x; }
+funcion libre(x,y) { retornar x>=0 && x<cols && y<filas && y<0 ? verdadero : (x>=0 && x<cols && y>=0 && tablero[celda(x,y)] == ""); }
+funcion dibujar() {
+  fondo("#101216");
+  para (var y=0; y<filas; y++) { para (var x=0; x<cols; x++) {
+    var v=tablero[celda(x,y)];
+    rectangulo(100+x*tam,30+y*tam,tam-1,tam-1,v==""?"#20242c":v);
+  }}
+  rectangulo(100+px*tam,30+py*tam,tam-1,tam-1,colores[puntos%7]);
+  texto(310,70,"Puntos: "+puntos,20,"blanco");
+  texto(310,105,"← → mover · ↓ caer",14,"gris");
+  si(fin){texto(130,220,"GAME OVER",32,"rojo");}
+}
+
+animar {
+  si(!fin){
+    si(tecla_justo_presionada("arrowleft") && libre(px-1,py)){px-=1;}
+    si(tecla_justo_presionada("arrowright") && libre(px+1,py)){px+=1;}
+    si(tecla_justo_presionada("arrowdown") && libre(px,py+1)){py+=1;}
+    cayendo += delta;
+    si(cayendo>0.35){
+      cayendo=0;
+      si(libre(px,py+1)){py+=1;} sino {
+        tablero[celda(px,py)]=colores[puntos%7];
+        px=4; py=0; puntos+=1;
+        si(!libre(px,py)){fin=verdadero;}
+      }
+    }
+  }
+  dibujar();
+}`,
+
+simulador:
+`# SIMULADOR DE PARTÍCULAS — gravedad, viento, rebote y energía
+var n = 90;
+var px = crearLista(n,0);
+var py = crearLista(n,0);
+var vx = crearLista(n,0);
+var vy = crearLista(n,0);
+var r = crearLista(n,0);
+var i = 0;
+para(i=0;i<n;i++){
+  px[i]=random(20,ancho-20);
+  py[i]=random(20,alto-100);
+  vx[i]=random(-40,40);
+  vy[i]=random(-30,30);
+  r[i]=random(2,7);
+}
+animar {
+  fondo("#080b12");
+  para(var i=0;i<n;i++){
+    vy[i]+=120*delta;
+    px[i]+=vx[i]*delta;
+    py[i]+=vy[i]*delta;
+    si(px[i]<r[i] || px[i]>ancho-r[i]){vx[i]*=-0.92;px[i]=limitar(px[i],r[i],ancho-r[i]);}
+    si(py[i]<r[i]){vy[i]*=-0.9;py[i]=r[i];}
+    si(py[i]>alto-r[i]){vy[i]*=-0.88;py[i]=alto-r[i];}
+    circulo(px[i],py[i],r[i],elegir("cian","azul","violeta","rosa"));
+  }
+  texto(15,25,"Partículas: "+n+"  FPS: "+redondear(fps),15,"blanco");
+}`,
+
+aventura:
+`# AVENTURA POINT-AND-CLICK — estilo puzzle/escape
+var escena=0;
+var puertaAbierta=falso;
+var llave=falso;
+var mensaje="Explora la habitación.";
+
+funcion dibujarHabitacion(){
+  fondo("#17120f");
+  rectangulo(50,50,500,300,"#514236");
+  rectangulo(370,120,100,180,"#241b18");
+  circulo(425,210,10,puertaAbierta?"verde":"rojo");
+  rectangulo(120,180,80,60,"#6e523e");
+  circulo(160,165,12,llave?"dorado":"gris");
+  texto(70,390,mensaje,18,"crema");
+  texto(70,420,"Haz clic en objetos. 1: reiniciar",14,"gris");
+}
+
+animar {
+  si(tecla_justo_presionada("1")){escena=0;llave=falso;puertaAbierta=falso;mensaje="La habitación se reinició.";}
+  si(clickEnRect(120,180,80,60)){llave=verdadero;mensaje="Encontraste una llave.";}
+  si(clickEnRect(370,120,100,180)){
+    si(llave){puertaAbierta=verdadero;mensaje="La puerta se abre. Has escapado.";} sino {mensaje="Está cerrada. Necesitas una llave.";}
+  }
+  dibujarHabitacion();
+}`,
+
+fisica:
+`# SIMULADOR DE GRAVEDAD — planeta, órbita, velocidad y energía visual
+var x=300; var y=120; var vx=75; var vy=0;
+var masa=1; var G=12000;
+animar {
+  fondo("#05070d");
+  circulo(300,220,42,"amarillo");
+  var dx=300-x; var dy=220-y;
+  var d2=max(400,dx*dx+dy*dy);
+  var d=raiz(d2);
+  var ax=G*dx/(d2*d); var ay=G*dy/(d2*d);
+  vx+=ax*delta; vy+=ay*delta;
+  x+=vx*delta; y+=vy*delta;
+  circulo(x,y,9,"cian");
+  linea(300,220,x,y,"#334155",1);
+  texto(15,25,"distancia: "+redondear(d)+"  velocidad: "+redondear(raiz(vx*vx+vy*vy)),14,"blanco");
+}`
+
+};
+
+examplesSel.addEventListener('change', () => {
+  const key = examplesSel.value;
+  if(!key) return;
+  codeEl.value = EXAMPLES[key];
+  runProgram();
+  examplesSel.value = '';
+});
+
+codeEl.value = EXAMPLES.basico;
+runProgram();
+
+/* ---------------- PANTALLA COMPLETA ---------------- */
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const fullscreenCanvas = document.getElementById('stage');
+
+function actualizarBotonFullscreen(){
+  if(!fullscreenBtn) return;
+
+  const activo =
+    document.fullscreenElement === fullscreenCanvas ||
+    document.webkitFullscreenElement === fullscreenCanvas;
+
+  fullscreenBtn.textContent = activo
+    ? '⛶ Salir pantalla completa'
+    : '⛶ Pantalla completa';
+
+  fullscreenBtn.title = activo
+    ? 'Salir de pantalla completa'
+    : 'Pantalla completa';
+}
+
+async function alternarPantallaCompleta(){
+  try{
+    const activo =
+      document.fullscreenElement === fullscreenCanvas ||
+      document.webkitFullscreenElement === fullscreenCanvas;
+
+    if(!activo){
+      if(fullscreenCanvas.requestFullscreen){
+        await fullscreenCanvas.requestFullscreen();
+      }else if(fullscreenCanvas.webkitRequestFullscreen){
+        fullscreenCanvas.webkitRequestFullscreen();
+      }else{
+        log('La pantalla completa no está disponible en este navegador.', true);
+      }
+    }else{
+      if(document.exitFullscreen){
+        await document.exitFullscreen();
+      }else if(document.webkitExitFullscreen){
+        document.webkitExitFullscreen();
+      }
+    }
+
+    actualizarBotonFullscreen();
+  }catch(e){
+    log(
+      'No se pudo activar la pantalla completa del Canvas: ' +
+      (e.message || e),
+      true
+    );
+  }
+}
+
+if(fullscreenBtn){
+  fullscreenBtn.addEventListener('click', alternarPantallaCompleta);
+}
+
+document.addEventListener('fullscreenchange', actualizarBotonFullscreen);
+document.addEventListener('webkitfullscreenchange', actualizarBotonFullscreen);
+
+actualizarBotonFullscreen();
+
+})();
+</script>
+</body>
+</html>
