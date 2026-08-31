@@ -51,6 +51,13 @@ code.blk{display:block;background:#101318;border:1px solid #3b4048;border-radius
 .swatches{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
 .sw{display:flex;align-items:center;gap:5px;font-size:11px;background:#1a1d22;border:1px solid #2d323a;border-radius:5px;padding:3px 7px 3px 4px;color:var(--muted)}
 .sw i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #0006}
+
+/* FIX DE DESPLAZAMIENTO DEL EDITOR */
+html,body{width:100%;height:100%;min-height:0;overflow:hidden !important;overscroll-behavior:none;}
+#app{width:100%;height:100dvh;min-height:0;overflow:hidden;}
+#main{min-height:0;height:calc(100dvh - 60px);overflow:hidden;}
+#editorPane,#rightPane{min-height:0;overflow:hidden;}
+#code{min-height:0;overflow:auto !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 </style>
 
 <style>
