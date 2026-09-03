@@ -51,13 +51,6 @@ code.blk{display:block;background:#101318;border:1px solid #3b4048;border-radius
 .swatches{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
 .sw{display:flex;align-items:center;gap:5px;font-size:11px;background:#1a1d22;border:1px solid #2d323a;border-radius:5px;padding:3px 7px 3px 4px;color:var(--muted)}
 .sw i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #0006}
-
-/* FIX DE DESPLAZAMIENTO DEL EDITOR */
-html,body{width:100%;height:100%;min-height:0;overflow:hidden !important;overscroll-behavior:none;}
-#app{width:100%;height:100dvh;min-height:0;overflow:hidden;}
-#main{min-height:0;height:calc(100dvh - 60px);overflow:hidden;}
-#editorPane,#rightPane{min-height:0;overflow:hidden;}
-#code{min-height:0;overflow:auto !important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 </style>
 
 <style>
@@ -1205,28 +1198,45 @@ function runProgram(){
 }
 
 
-/* ---------------- FLASNG2 EXPORT ---------------- */
-const FLASNG_FORMAT_VERSION="2";
-const FLASNG_XOR_KEY="FLASHING-FLASNG-CORE-V1";
+/* ---------------- FLASNG3 EXPORT (AES-256-GCM) ---------------- */
+const FLASNG_FORMAT_VERSION="3";
+const FLASNG3_ITERATIONS=120000;
 
-function flasng2Xor(bytes){
-  const key=new TextEncoder().encode(FLASNG_XOR_KEY);
-  const out=new Uint8Array(bytes.length);
-  for(let i=0;i<bytes.length;i++) out[i]=bytes[i]^key[i%key.length];
+/* Material secreto deliberadamente fragmentado/ofuscado.
+   Nota: al ejecutarse en navegador, ningún secreto cliente puede ser absolutamente inaccesible. */
+function flasng3SecretBytes(){
+  const a=[91,14,201,44,175,99,18,231,77,156,43,219,6,130,241,58,167,11,92,202,53,188,7,145,224,39,114,173,64,215,31,126];
+  const b=[34,109,168,88,220,5,119,132,58,239,76,190,103,225,144,91,196,104,61,171,82,223,102,240,129,70,19,204,37,182,126,31];
+  const out=new Uint8Array(a.length);
+  for(let i=0;i<a.length;i++) out[i]=a[i]^b[i]^((i*29+73)&255);
   return out;
 }
-function flasng2Hex(bytes){
-  let out="";
-  for(const b of bytes) out+=b.toString(16).padStart(2,"0");
-  return out.toUpperCase();
+function bytesToB64(bytes){
+  let bin="";
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk) bin+=String.fromCharCode(...bytes.subarray(i,i+chunk));
+  return btoa(bin);
 }
-function flasng2Encode(text){
-  return flasng2Hex(flasng2Xor(new TextEncoder().encode(text)));
+async function gzipBytes(bytes){
+  if(typeof CompressionStream!=="function") return {bytes,compression:"none"};
+  const cs=new CompressionStream("gzip");
+  const stream=new Blob([bytes]).stream().pipeThrough(cs);
+  return {bytes:new Uint8Array(await new Response(stream).arrayBuffer()),compression:"gzip"};
+}
+async function deriveFlasng3Key(salt){
+  const base=await crypto.subtle.importKey("raw",flasng3SecretBytes(),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2",salt,iterations:FLASNG3_ITERATIONS,hash:"SHA-256"},
+    base,
+    {name:"AES-GCM",length:256},
+    false,
+    ["encrypt"]
+  );
 }
 function flashirExportPayload(){
   const payload={
-    format:"FLASNG2",
-    version:2,
+    format:"FLASNG3",
+    version:3,
     engine:"Flashir",
     language:"FLASHIR",
     source:codeEl.value,
@@ -1234,38 +1244,46 @@ function flashirExportPayload(){
     height:canvas.height,
     createdAt:new Date().toISOString(),
     runtime:"Flashir-2",
-    features:{
-      animation:true,
-      keyboard:true,
-      mouse:true,
-      canvas:true,
-      customLanguage:true
-    }
+    features:{animation:true,keyboard:true,mouse:true,canvas:true,customLanguage:true}
   };
   return JSON.stringify(payload);
 }
-function exportFlashirGame(){
-  const payload=flashirExportPayload();
-  const hex=flasng2Encode(payload);
-  const header=[
-    "FLASNG/2",
-    "FORMAT CUSTOM REVERSIBLE",
-    "ENGINE Flashir",
-    "LANGUAGE FLASHIR",
-    "CRYPTO XOR-REPEATING-KEY-V1",
-    "KEY-ID FLASHING-FLASNG-CORE-V1",
-    "PAYLOAD HEX-XOR"
-  ].join("\n");
-  const content=header+"\n"+hex+"\nEND-FLASNG\n";
-  const blob=new Blob([content],{type:"application/x-flasng"});
-  const a=document.createElement("a");
-  a.download=(document.title||"flashir").replace(/[^a-z0-9_-]+/gi,"_")+".flasng";
-  a.href=URL.createObjectURL(blob);
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  log("Juego exportado como FLASNG2: "+a.download);
+async function exportFlashirGame(){
+  try{
+    if(!globalThis.crypto?.subtle) throw new Error("Este navegador no soporta Web Crypto (crypto.subtle).");
+    const payloadBytes=new TextEncoder().encode(flashirExportPayload());
+    const packed=await gzipBytes(payloadBytes);
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const key=await deriveFlasng3Key(salt);
+    const aad=new TextEncoder().encode("FLASNG/3|Flashir|FLASHIR");
+    const encrypted=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv,additionalData:aad,tagLength:128},key,packed.bytes));
+    const content=[
+      "FLASNG/3",
+      "ENGINE Flashir",
+      "LANGUAGE FLASHIR",
+      "CRYPTO AES-256-GCM",
+      "KDF PBKDF2-SHA256",
+      "ITERATIONS "+FLASNG3_ITERATIONS,
+      "COMPRESSION "+packed.compression.toUpperCase(),
+      "SALT "+bytesToB64(salt),
+      "IV "+bytesToB64(iv),
+      "PAYLOAD BASE64",
+      bytesToB64(encrypted),
+      "END-FLASNG",
+      ""
+    ].join("\n");
+    const blob=new Blob([content],{type:"application/x-flasng"});
+    const a=document.createElement("a");
+    a.download=(document.title||"flashir").replace(/[^a-z0-9_-]+/gi,"_")+".flasng";
+    const url=URL.createObjectURL(blob);
+    a.href=url;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    log("Juego exportado como FLASNG3 cifrado (AES-256-GCM): "+a.download);
+  }catch(e){
+    log("No se pudo exportar FLASNG3: "+(e?.message||e),true);
+  }
 }
 
 /* ---------------- INTERFAZ ---------------- */
